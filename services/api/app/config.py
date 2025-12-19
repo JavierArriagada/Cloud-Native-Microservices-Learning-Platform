@@ -19,6 +19,7 @@ class Settings:
     # Server
     HOST: str = os.getenv("API_HOST", "0.0.0.0")
     PORT: int = int(os.getenv("API_PORT", "8000"))
+    ROOT_PATH: str = os.getenv("API_ROOT_PATH", "/api")  # Para funcionar detrás de proxy (Traefik)
 
     # Database
     DATABASE_URL: str = os.getenv(
