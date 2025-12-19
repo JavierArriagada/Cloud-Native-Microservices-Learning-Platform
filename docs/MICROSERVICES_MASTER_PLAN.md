@@ -47,7 +47,7 @@ Una **plataforma de aprendizaje práctica** para dominar arquitecturas de micros
 
 ### 1.2 Diagrama de Contexto
 
-\`\`\`mermaid
+```mermaid
 C4Context
     title Diagrama de Contexto - Microservices Learning Platform
 
@@ -68,11 +68,11 @@ C4Context
     Rel(platform, cloud, "Deploy")
     Rel(platform, github, "Código")
     Rel(monitoring, platform, "Observa")
-\`\`\`
+```
 
 ### 1.3 Principios de Diseño
 
-\`\`\`mermaid
+```mermaid
 mindmap
   root((Principios))
     Simplicidad
@@ -91,7 +91,7 @@ mindmap
       Local = Producción
       Agnóstico cloud
       Standards abiertos
-\`\`\`
+```
 
 ---
 
@@ -99,7 +99,7 @@ mindmap
 
 ### 2.1 Competencias a Desarrollar
 
-\`\`\`mermaid
+```mermaid
 flowchart TB
     subgraph CORE["🎯 Core"]
         C1[Containerización Docker]
@@ -130,7 +130,7 @@ flowchart TB
     end
     
     CORE --> DEVOPS --> DEV --> CLOUD
-\`\`\`
+```
 
 ### 2.2 Roadmap de Fases
 
@@ -149,7 +149,7 @@ flowchart TB
 
 ### 3.1 Arquitectura de Alto Nivel
 
-\`\`\`mermaid
+```mermaid
 flowchart TB
     subgraph EXTERNAL["🌐 Externo"]
         USER[Usuario]
@@ -191,11 +191,11 @@ flowchart TB
     PROM --> DASH
     GRAF --> PROM
     GRAF --> LOKI
-\`\`\`
+```
 
 ### 3.2 Redes Docker
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     subgraph frontend["Network: frontend"]
         traefik
@@ -217,7 +217,7 @@ flowchart LR
     traefik --- api
     api --- postgres
     prometheus -.-> api
-\`\`\`
+```
 
 ---
 
@@ -245,7 +245,7 @@ flowchart LR
 
 ### 4.2 ¿Por qué FastAPI sobre Flask?
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     subgraph FLASK["Flask"]
         F1["❌ Sync por defecto"]
@@ -261,7 +261,7 @@ flowchart LR
     end
     
     FLASK -->|Evolucionar| FASTAPI
-\`\`\`
+```
 
 ---
 
@@ -269,7 +269,7 @@ flowchart LR
 
 ### 5.1 Árbol de Directorios
 
-\`\`\`
+```
 microservices-learning-platform/
 ├── .github/workflows/          # CI/CD pipelines
 │   ├── ci.yml
@@ -337,7 +337,7 @@ microservices-learning-platform/
 ├── .env.example
 ├── .gitignore
 └── README.md
-\`\`\`
+```
 
 ---
 
@@ -394,7 +394,7 @@ microservices-learning-platform/
 
 ### 7.1 Request Típico
 
-\`\`\`mermaid
+```mermaid
 sequenceDiagram
     autonumber
     participant U as Usuario
@@ -416,7 +416,7 @@ sequenceDiagram
     DB->>A: Data
     A->>T: JSON
     T->>U: Response
-\`\`\`
+```
 
 ---
 
@@ -431,7 +431,7 @@ sequenceDiagram
 
 ### 8.2 Variables de Entorno (.env.example)
 
-\`\`\`bash
+```bash
 # General
 COMPOSE_PROJECT_NAME=mlp
 ENVIRONMENT=development
@@ -457,7 +457,7 @@ VITE_API_URL=http://localhost/api
 # Monitoring
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=admin
-\`\`\`
+```
 
 ### 8.3 Docker Compose Principal
 
@@ -476,7 +476,7 @@ Servicios incluidos:
 
 ### 9.1 Stack
 
-\`\`\`mermaid
+```mermaid
 flowchart TB
     subgraph METRICS["📊 Métricas"]
         PROM[Prometheus]
@@ -492,7 +492,7 @@ flowchart TB
     
     METRICS --> GRAF
     LOGS --> GRAF
-\`\`\`
+```
 
 ### 9.2 Acceso
 
@@ -505,14 +505,14 @@ flowchart TB
 
 ### 10.1 Pipeline CI
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     PUSH[Push] --> LINT[Lint]
     LINT --> TEST[Test]
     TEST --> BUILD[Build]
     BUILD --> SCAN[Security]
     SCAN --> PUSH_IMG[Push Images]
-\`\`\`
+```
 
 ### 10.2 GitHub Actions
 
@@ -533,13 +533,13 @@ Archivos en \`.github/workflows/\`:
 
 ### 11.2 Arquitectura GCP
 
-\`\`\`mermaid
+```mermaid
 flowchart TB
     USERS[Users] --> GLB[Load Balancer]
     GLB --> GKE[GKE Cluster]
     GKE --> PODS[API + Dash + React]
     PODS --> CLOUDSQL[(Cloud SQL)]
-\`\`\`
+```
 
 ---
 
@@ -582,7 +582,7 @@ flowchart TB
 
 ## 13. Comandos Make
 
-\`\`\`makefile
+```makefile
 # 🚀 Desarrollo
 make dev-up          # Levantar todo
 make dev-down        # Detener todo
@@ -614,7 +614,7 @@ make deploy-prod     # Deploy producción
 make clean           # Limpiar todo
 make urls            # Mostrar URLs
 make check-deps      # Verificar deps
-\`\`\`
+```
 
 ---
 
@@ -634,7 +634,7 @@ make check-deps      # Verificar deps
 
 ## 15. Prompt para Claude Code
 
-\`\`\`markdown
+```markdown
 He preparado un documento maestro para un proyecto de microservicios 
 cloud-native. Incluye arquitectura, stack, estructura, configs, 
 CI/CD, monitoreo y despliegue a Kubernetes.
@@ -653,7 +653,7 @@ Requisitos:
 Mi ambiente: WSL2 Ubuntu, Docker Desktop, Node 20, Python 3.12
 
 ¿Comenzamos con Fase 1?
-\`\`\`
+```
 
 ---
 
