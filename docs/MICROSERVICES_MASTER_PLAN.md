@@ -47,26 +47,28 @@ Este proyecto implementa una plataforma cloud-native basada en microservicios, c
 ### 1.2 Diagrama de Contexto
 
 ```mermaid
-C4Context
-    title Diagrama de Contexto - Microservices Learning Platform
-
-    Person(dev, "Desarrollador", "Aprende microservicios")
-        Person(dev, "Desarrollador", "Operador del sistema")
-    System_Boundary(platform, "Learning Platform") {
-        System(api, "API Backend", "FastAPI")
-        System(dash, "Dash App", "Python Dashboard")
-        System(react, "React App", "TypeScript SPA")
-        System(db, "PostgreSQL", "Base de datos")
-    }
+flowchart TB
+    subgraph USUARIO["👤 Usuario"]
+        DEV[Desarrollador/Operador]
+    end
     
-    System_Ext(cloud, "GCP", "Kubernetes")
-    System_Ext(github, "GitHub", "CI/CD")
-    System_Ext(monitoring, "Monitoreo", "Prometheus/Grafana")
+    subgraph PLATAFORMA["🏗️ Plataforma"]
+        API[API Backend<br/>FastAPI]
+        DASH[Dash App<br/>Python Dashboard]
+        REACT[React App<br/>TypeScript SPA]
+        DB[(PostgreSQL<br/>Base de datos)]
+    end
     
-    Rel(dev, platform, "Desarrolla")
-    Rel(platform, cloud, "Deploy")
-    Rel(platform, github, "Código")
-    Rel(monitoring, platform, "Observa")
+    subgraph EXTERNOS["🔗 Sistemas Externos"]
+        CLOUD[GCP<br/>Kubernetes]
+        GITHUB[GitHub<br/>CI/CD]
+        MONITORING[Monitoreo<br/>Prometheus/Grafana]
+    end
+    
+    DEV --> PLATAFORMA
+    PLATAFORMA --> CLOUD
+    PLATAFORMA --> GITHUB
+    MONITORING --> PLATAFORMA
 ```
 
 ### 1.3 Principios de Diseño
@@ -90,13 +92,7 @@ mindmap
       Local = Producción
       Agnóstico cloud
       Standards abiertos
-
-| **3** | Integración | Traefik, Docker networks | 2 días |
-| **4** | Monitoreo | Prometheus, Grafana, Loki | 2-3 días |
-| **5** | CI/CD | GitHub Actions, tests | 2 días |
-| **6** | Cloud | Kubernetes, GKE | 3-4 días |
-
----
+```
 
 ## 3. Arquitectura del Sistema
 
