@@ -5,29 +5,21 @@
 
 ## 🌟 Visión General
 
-Este proyecto es una **plataforma de aprendizaje práctica** diseñada para dominar arquitecturas de microservicios cloud-native. A través de la implementación de una aplicación completa, los usuarios aprenderán a construir, desplegar y operar sistemas distribuidos utilizando un stack tecnológico moderno y relevante en la industria.
+Este proyecto implementa una plataforma cloud-native basada en microservicios, diseñada para operar sistemas distribuidos utilizando un stack tecnológico moderno y relevante en la industria.
 
-La plataforma incluye:
 
--   ✅ Múltiples servicios containerizados (FastAPI, Dash, React)
--   ✅ API Gateway con Traefik para enrutamiento dinámico
--   ✅ Base de datos PostgreSQL persistente
--   ✅ Frontend React TypeScript y un Dashboard interactivo con Dash Python
--   ✅ Sistema de monitoreo completo con Prometheus, Grafana y Loki
--   ✅ Pipeline CI/CD automatizado con GitHub Actions
--   ✅ Despliegue a Kubernetes en Google Cloud Platform (GCP)
+Características principales:
+- Múltiples servicios containerizados (FastAPI, Dash, React)
+- API Gateway con Traefik para enrutamiento dinámico
+- Base de datos PostgreSQL persistente
+- Frontend React TypeScript y Dashboard interactivo con Dash Python
+- Sistema de monitoreo completo con Prometheus, Grafana y Loki
+- Pipeline CI/CD automatizado con GitHub Actions
+- Despliegue a Kubernetes en Google Cloud Platform (GCP)
 
-Este repositorio sirve como una guía paso a paso, acompañada de un documento maestro de planificación (`docs/MICROSERVICES_MASTER_PLAN.md`), para construir cada componente desde cero.
+Este repositorio contiene la planificación, arquitectura y configuración completa del sistema en `docs/MICROSERVICES_MASTER_PLAN.md`.
 
-## 🎯 Objetivos de Aprendizaje
 
-Al completar este proyecto, desarrollarás competencias clave en:
-
--   **Containerización y Orquestación:** Docker, Docker Compose, Kubernetes.
--   **Desarrollo Backend y Frontend:** FastAPI, React, Dash, PostgreSQL.
--   **DevOps:** CI/CD con GitHub Actions, Infrastructure as Code.
--   **Observabilidad:** Monitoreo con Prometheus, Grafana, Loki.
--   **Cloud:** Despliegue en GCP (GKE), gestión de servicios cloud.
 
 ## 🛠️ Stack Tecnológico
 

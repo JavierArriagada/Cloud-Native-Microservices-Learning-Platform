@@ -9,7 +9,6 @@
 
 ---
 
-## 📋 Índice Rápido
 
 | Sección | Contenido |
 |---------|-----------|
@@ -30,21 +29,21 @@
 | [15. Prompt Claude Code](#15-prompt-para-claude-code) | Cómo usar este documento |
 
 ---
-
 ## 1. Visión General
 
 ### 1.1 ¿Qué es este proyecto?
 
 Una **plataforma de aprendizaje práctica** para dominar arquitecturas de microservicios cloud-native. Implementa una aplicación completa con:
-
+Este proyecto implementa una plataforma cloud-native basada en microservicios, con los siguientes componentes:
 - ✅ Múltiples servicios containerizados
-- ✅ API Gateway con Traefik
-- ✅ Base de datos PostgreSQL
-- ✅ Frontend React TypeScript + Dashboard Dash Python
-- ✅ Monitoreo completo (Prometheus/Grafana/Loki)
-- ✅ CI/CD automatizado con GitHub Actions
-- ✅ Despliegue a Kubernetes en GCP
 
+- Múltiples servicios containerizados
+- API Gateway con Traefik
+- Base de datos PostgreSQL
+- Frontend React TypeScript + Dashboard Dash Python
+- Monitoreo completo (Prometheus/Grafana/Loki)
+- CI/CD automatizado con GitHub Actions
+- Despliegue a Kubernetes en GCP
 ### 1.2 Diagrama de Contexto
 
 ```mermaid
@@ -52,7 +51,7 @@ C4Context
     title Diagrama de Contexto - Microservices Learning Platform
 
     Person(dev, "Desarrollador", "Aprende microservicios")
-    
+        Person(dev, "Desarrollador", "Operador del sistema")
     System_Boundary(platform, "Learning Platform") {
         System(api, "API Backend", "FastAPI")
         System(dash, "Dash App", "Python Dashboard")
@@ -91,53 +90,7 @@ mindmap
       Local = Producción
       Agnóstico cloud
       Standards abiertos
-```
 
----
-
-## 2. Objetivos de Aprendizaje
-
-### 2.1 Competencias a Desarrollar
-
-```mermaid
-flowchart TB
-    subgraph CORE["🎯 Core"]
-        C1[Containerización Docker]
-        C2[Orquestación Compose]
-        C3[Kubernetes]
-        C4[Networking]
-    end
-    
-    subgraph DEVOPS["🔧 DevOps"]
-        D1[CI/CD GitHub Actions]
-        D2[Infrastructure as Code]
-        D3[Secretos]
-        D4[Monitoreo]
-    end
-    
-    subgraph DEV["💻 Desarrollo"]
-        E1[APIs FastAPI]
-        E2[Dashboards Dash]
-        E3[SPAs React TS]
-        E4[PostgreSQL]
-    end
-    
-    subgraph CLOUD["☁️ Cloud"]
-        F1[GCP/AWS]
-        F2[Container Registry]
-        F3[Managed K8s]
-        F4[Load Balancing]
-    end
-    
-    CORE --> DEVOPS --> DEV --> CLOUD
-```
-
-### 2.2 Roadmap de Fases
-
-| Fase | Enfoque | Tecnologías | Duración Est. |
-|------|---------|-------------|---------------|
-| **1** | Estructura Base | Git, Makefile, Docker | 1-2 días |
-| **2** | Hello World | FastAPI, Dash, React, PostgreSQL | 3-4 días |
 | **3** | Integración | Traefik, Docker networks | 2 días |
 | **4** | Monitoreo | Prometheus, Grafana, Loki | 2-3 días |
 | **5** | CI/CD | GitHub Actions, tests | 2 días |
