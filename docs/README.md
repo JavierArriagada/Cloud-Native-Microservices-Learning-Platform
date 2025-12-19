@@ -26,6 +26,7 @@ Contacto
 ## Índice de la documentación (actual)
 
 - [MICROSERVICES_MASTER_PLAN.md](MICROSERVICES_MASTER_PLAN.md) — Documento maestro de planificación y arquitectura (arquitectura, stack, guías, diagramas).
+- [CLAUDE_CODE_WORKFLOW.md](CLAUDE_CODE_WORKFLOW.md) — Flujo de trabajo con Claude Code: plugins, skills y mejores prácticas de desarrollo.
 - [README.md](/README.md) — Presentación del repo y resumen del proyecto.
 
 > Nota: este índice debe actualizarse cada vez que se añada un nuevo documento en `docs/`.
