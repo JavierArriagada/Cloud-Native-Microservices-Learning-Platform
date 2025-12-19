@@ -46,6 +46,14 @@ services:
       - monitoring
       - backend
       - frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`localhost`) && PathPrefix(`/prometheus`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      - "traefik.http.middlewares.prometheus-stripprefix.stripprefix.prefixes=/prometheus"
+      - "traefik.http.routers.prometheus.middlewares=prometheus-stripprefix"
+      - "traefik.http.routers.prometheus.priority=20"
     restart: unless-stopped
 
   # ===========================================================================
@@ -58,7 +66,8 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=http://localhost:3001
+      - GF_SERVER_ROOT_URL=${GF_SERVER_ROOT_URL:-http://localhost/grafana}
+      - GF_SERVER_SERVE_FROM_SUB_PATH=${GF_SERVER_SERVE_FROM_SUB_PATH:-true}
       - GF_INSTALL_PLUGINS=
     volumes:
       - grafana_data:/var/lib/grafana
@@ -67,6 +76,15 @@ services:
       - "${GRAFANA_PORT:-3001}:3000"
     networks:
       - monitoring
+      - frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`localhost`) && PathPrefix(`/grafana`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.grafana-stripprefix.stripprefix.prefixes=/grafana"
+      - "traefik.http.routers.grafana.middlewares=grafana-stripprefix"
+      - "traefik.http.routers.grafana.priority=20"
     depends_on:
       - prometheus
       - loki
@@ -88,6 +106,14 @@ services:
       - monitoring
       - backend
       - frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.loki.rule=Host(`localhost`) && PathPrefix(`/loki`)"
+      - "traefik.http.routers.loki.entrypoints=web"
+      - "traefik.http.services.loki.loadbalancer.server.port=3100"
+      - "traefik.http.middlewares.loki-stripprefix.stripprefix.prefixes=/loki"
+      - "traefik.http.routers.loki.middlewares=loki-stripprefix"
+      - "traefik.http.routers.loki.priority=20"
     restart: unless-stopped
 
   # ===========================================================================

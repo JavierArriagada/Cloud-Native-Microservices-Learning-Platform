@@ -72,13 +72,18 @@ function App() {
               </a>
             </li>
             <li>
-              <a href="http://localhost:9090" target="_blank" rel="noopener noreferrer">
+              <a href="/prometheus" target="_blank" rel="noopener noreferrer">
                 📈 Prometheus
               </a>
             </li>
             <li>
-              <a href="http://localhost:3001" target="_blank" rel="noopener noreferrer">
+              <a href="/grafana" target="_blank" rel="noopener noreferrer">
                 📉 Grafana
+              </a>
+            </li>
+            <li>
+              <a href="/loki" target="_blank" rel="noopener noreferrer">
+                📝 Loki (Logs)
               </a>
             </li>
           </ul>

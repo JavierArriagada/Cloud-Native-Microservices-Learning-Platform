@@ -131,7 +131,7 @@ services:
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.react.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.react.rule=Host(`localhost`)"
       - "traefik.http.routers.react.entrypoints=web"
       - "traefik.http.routers.react.priority=1"
       - "traefik.http.services.react.loadbalancer.server.port=80"
