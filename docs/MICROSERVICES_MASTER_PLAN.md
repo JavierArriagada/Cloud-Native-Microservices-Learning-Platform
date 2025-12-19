@@ -177,7 +177,7 @@ flowchart LR
 | Componente | Tecnología | ¿Por qué? |
 |------------|------------|-----------|
 | **API** | FastAPI | Async, tipado, docs automáticos |
-| **ORM** | SQLAlchemy 2.0 | Async support, maduro |
+| **Acceso a BD** | SQL puro (asyncpg); opcional SQLAlchemy Core/Engine para pool (no ORM) | Control total de consultas, mejor rendimiento y claridad en transacciones |
 | **Dashboard** | Dash + Plotly | Python nativo, interactivo |
 | **Frontend** | React + TypeScript + Vite | Rápido, tipado, moderno |
 | **Styling** | Tailwind CSS | Utility-first |
@@ -231,7 +231,8 @@ microservices-learning-platform/
 │   │   │   ├── main.py
 │   │   │   ├── config.py
 │   │   │   ├── database.py
-│   │   │   ├── models/
+│   │   │   ├── models/               # Pydantic schemas y tipos (NO ORM)
+│   │   │   ├── queries/              # SQL puro: archivos .sql o helpers con queries
 │   │   │   ├── schemas/
 │   │   │   ├── routers/
 │   │   │   └── services/
@@ -313,6 +314,10 @@ microservices-learning-platform/
 - Validación con Pydantic
 - OpenAPI automático
 - CORS configurado
+
+- Acceso a BD: uso de SQL puro (consultas escritas a mano) con `asyncpg` o similar.
+- Opcional: usar SQLAlchemy Core / Engine únicamente para gestión de conexión y pooling (no usar el ORM de SQLAlchemy). Esto permite usar ventaja del pool y transacciones seguras sin mapear entidades.
+- Recomendaciones: centralizar queries en `services/` o `queries/`, usar transacciones explícitas, y escribir pruebas que verifiquen queries y manejo de errores.
 
 ### 6.3 Dash App
 
