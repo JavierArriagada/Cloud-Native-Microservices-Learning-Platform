@@ -73,25 +73,26 @@ flowchart TB
 
 ### 1.3 Principios de Diseño
 
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#2b2b2b', 'secondaryColor': '#3d3d3d', 'tertiaryColor': '#444444', 'mainBkg': '#0b1116', 'primaryTextColor': '#e6eef6', 'nodeTextColor': '#e6eef6', 'edgeLabelBackground': '#0b1116' }}}%%
 ```mermaid
 mindmap
-  root((Principios))
-    Simplicidad
-      Hello World primero
-      Complejidad incremental
-      Documentación clara
-    Reproducibilidad
-      Containers idénticos
-      IaC
-      Config versionada
-    Observabilidad
-      Logs centralizados
-      Métricas tiempo real
-      Trazabilidad
-    Portabilidad
-      Local = Producción
-      Agnóstico cloud
-      Standards abiertos
+    root((Principios))
+        Simplicidad
+            Hello World primero
+            Complejidad incremental
+            Documentación clara
+        Reproducibilidad
+            Containers idénticos
+            IaC
+            Config versionada
+        Observabilidad
+            Logs centralizados
+            Métricas tiempo real
+            Trazabilidad
+        Portabilidad
+            Local = Producción
+            Agnóstico cloud
+            Standards abiertos
 ```
 
 ## 3. Arquitectura del Sistema
