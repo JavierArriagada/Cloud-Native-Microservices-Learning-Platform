@@ -295,10 +295,19 @@ microservices-learning-platform/
 
 ### 6.1 PostgreSQL
 
-- **Imagen:** postgres:16-alpine
-- **Puerto:** 5432
-- **Volume:** pg_data (persistencia)
-- **Health check:** pg_isready
+**Imagen:** postgres:16-alpine
+**Puerto:** 5432
+**Volume:** pg_data (persistencia)
+**Health check:** pg_isready
+
+**Gestión de la base de datos:**
+- Todas las migraciones, inicialización de tablas y creación de usuarios/roles deben gestionarse desde el backend Python usando Alembic.
+- Desde el inicio del proyecto, se debe:
+    - Inicializar Alembic en el backend
+    - Crear el esquema y tablas necesarias
+    - Crear el usuario de aplicación y asignar permisos
+    - Mantener el historial de migraciones en el repositorio
+- Las queries de consulta y manipulación de datos (SELECT, INSERT, UPDATE, DELETE) deben escribirse siempre en SQL puro (sin ORM), usando `asyncpg` o SQLAlchemy Core sólo para gestión de conexiones/pool.
 
 ### 6.2 API FastAPI
 
