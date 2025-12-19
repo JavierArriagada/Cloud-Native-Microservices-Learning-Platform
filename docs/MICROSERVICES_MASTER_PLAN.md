@@ -4,8 +4,8 @@
 
 **Versión:** 1.0.0  
 **Fecha:** 2024-12-19  
-**Autor:** Javier (con asistencia de Claude)  
-**Propósito:** Documento de contexto completo para implementación con Claude Code en WSL
+**Autor:** Javier  
+**Propósito:** Documento de contexto completo para implementación 
 
 ---
 
@@ -26,7 +26,6 @@
 | [12. Fases](#12-guías-por-fases) | Implementación paso a paso |
 | [13. Makefile](#13-comandos-make) | Todos los comandos |
 | [14. Troubleshooting](#14-troubleshooting) | FAQ, problemas comunes |
-| [15. Prompt Claude Code](#15-prompt-para-claude-code) | Cómo usar este documento |
 
 ---
 ## 1. Visión General
@@ -582,7 +581,7 @@ make check-deps      # Verificar deps
 
 ---
 
-## 15. Prompt para Claude Code
+## 15. Prompt
 
 ```markdown
 He preparado un documento maestro para un proyecto de microservicios 
@@ -601,8 +600,6 @@ Requisitos:
 - Comentarios explicativos en código
 
 Mi ambiente: WSL2 Ubuntu, Docker Desktop, Node 20, Python 3.12
-
-¿Comenzamos con Fase 1?
 ```
 
 ---
@@ -617,4 +614,3 @@ Mi ambiente: WSL2 Ubuntu, Docker Desktop, Node 20, Python 3.12
 
 **FIN DEL DOCUMENTO**
 
-*Generado para uso con Claude Code*
