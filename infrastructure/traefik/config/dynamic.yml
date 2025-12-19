@@ -1,0 +1,69 @@
+# =============================================================================
+# Traefik Dynamic Configuration
+# =============================================================================
+# This file provides static service discovery for WSL2 environments
+# where Docker socket access may be limited
+# =============================================================================
+
+http:
+  # ===========================================================================
+  # ROUTERS
+  # ===========================================================================
+  routers:
+    # API Router
+    api-router:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/api`)"
+      service: api-service
+      middlewares:
+        - api-stripprefix
+      priority: 100
+
+    # Dash Router
+    dash-router:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/dash`)"
+      service: dash-service
+      priority: 90
+
+    # React Router (fallback)
+    react-router:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/`)"
+      service: react-service
+      priority: 1
+
+  # ===========================================================================
+  # MIDDLEWARE
+  # ===========================================================================
+  middlewares:
+    api-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/api"
+
+  # ===========================================================================
+  # SERVICES
+  # ===========================================================================
+  services:
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://mlp_api:8000"
+
+    dash-service:
+      loadBalancer:
+        servers:
+          - url: "http://mlp_dash:8050"
+
+    react-service:
+      loadBalancer:
+        servers:
+          - url: "http://mlp_react:3000"
+
+# =============================================================================
+# FIN DE DYNAMIC.YML
+# =============================================================================

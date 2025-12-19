@@ -1,0 +1,21 @@
+# =============================================================================
+# React Frontend - Development Dockerfile
+# =============================================================================
+FROM node:20-alpine as development
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code (will be overridden by volume)
+COPY . .
+
+# Expose Vite dev server port
+EXPOSE 3000
+
+# Run Vite dev server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

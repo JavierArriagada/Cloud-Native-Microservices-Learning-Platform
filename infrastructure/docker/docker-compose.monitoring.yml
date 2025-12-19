@@ -1,0 +1,114 @@
+# =============================================================================
+# Cloud-Native Microservices Learning Platform - Monitoring Stack
+# =============================================================================
+# Stack de observabilidad: Prometheus, Grafana, Loki
+# Uso: docker compose -f docker-compose.monitoring.yml up
+# O desde el Makefile: make monitoring-up
+# =============================================================================
+
+networks:
+  monitoring:
+    driver: bridge
+  backend:
+    external: true
+    name: ${COMPOSE_PROJECT_NAME:-mlp}_backend
+  frontend:
+    external: true
+    name: ${COMPOSE_PROJECT_NAME:-mlp}_frontend
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+
+services:
+  # ===========================================================================
+  # PROMETHEUS - Metrics Collection
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: ${COMPOSE_PROJECT_NAME:-mlp}_prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - monitoring
+      - backend
+      - frontend
+    restart: unless-stopped
+
+  # ===========================================================================
+  # GRAFANA - Visualization
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: ${COMPOSE_PROJECT_NAME:-mlp}_grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+
+  # ===========================================================================
+  # LOKI - Log Aggregation
+  # ===========================================================================
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: ${COMPOSE_PROJECT_NAME:-mlp}_loki
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ../loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    networks:
+      - monitoring
+      - backend
+      - frontend
+    restart: unless-stopped
+
+  # ===========================================================================
+  # PROMTAIL - Log Collector (Optional)
+  # ===========================================================================
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: ${COMPOSE_PROJECT_NAME:-mlp}_promtail
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ../loki/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "${PROMTAIL_PORT:-9080}:9080"
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+# =============================================================================
+# FIN DE DOCKER-COMPOSE.MONITORING.YML
+# =============================================================================
