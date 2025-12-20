@@ -1,7 +1,7 @@
 # =============================================================================
 # FastAPI Backend - Production Dockerfile
 # =============================================================================
-FROM python:3.12-slim as base
+FROM python:3.12-slim AS base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
 # =============================================================================
 # Production Stage
 # =============================================================================
-FROM base as production
+FROM base AS production
 
 # Copy requirements
 COPY requirements.txt .
@@ -31,6 +31,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY ./app /app/app
+
+# Copy Alembic configuration and migrations
+COPY ./alembic /app/alembic
+COPY ./alembic.ini /app/alembic.ini
+
+# Copy scripts
+COPY ./scripts /app/scripts
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \

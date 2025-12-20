@@ -25,6 +25,11 @@ services:
       # Mount source code for hot reload
       - ../../services/api/app:/app/app:cached
       - ../../services/api/tests:/app/tests:cached
+      # Mount alembic for migrations
+      - ../../services/api/alembic:/app/alembic:cached
+      - ../../services/api/alembic.ini:/app/alembic.ini:cached
+      # Mount scripts
+      - ../../services/api/scripts:/app/scripts:cached
     ports:
       # Expose port directly for debugging
       - "8000:8000"
