@@ -33,9 +33,13 @@ Contacto
 - [DEVELOPMENT_CREDENTIALS.md](DEVELOPMENT_CREDENTIALS.md) — Credenciales y guía de acceso a servicios en ambiente de desarrollo.
 
 ### Base de Datos
-- [DATABASE_SCHEMA_DESIGN.md](DATABASE_SCHEMA_DESIGN.md) — Diseño del esquema de base de datos.
-- [SETUP_DATABASE.md](SETUP_DATABASE.md) — Configuración inicial de la base de datos.
-- [ALEMBIC_GUIDE.md](ALEMBIC_GUIDE.md) — Guía para gestión de migraciones con Alembic.
+- **[DATABASE_GUIDE.md](DATABASE_GUIDE.md)** — 📘 **Guía completa y centralizada de base de datos** (diseño, ERD, crear tablas, comandos, script automatizado)
+- [DATABASE_NEW_TABLE_GUIDE.md](DATABASE_NEW_TABLE_GUIDE.md) — Guía paso a paso para crear nuevas tablas
+- [DATABASE_CHEATSHEET.md](DATABASE_CHEATSHEET.md) — Cheatsheet rápido de comandos de base de datos
+- [WORKFLOW_DATABASE.md](WORKFLOW_DATABASE.md) — Workflow completo de desarrollo con base de datos
+- [DATABASE_SCHEMA_DESIGN.md](DATABASE_SCHEMA_DESIGN.md) — Diseño del esquema de base de datos
+- [SETUP_DATABASE.md](SETUP_DATABASE.md) — Configuración inicial de la base de datos
+- [ALEMBIC_GUIDE.md](ALEMBIC_GUIDE.md) — Guía para gestión de migraciones con Alembic
 
 ### Infraestructura
 - [TRAEFIK_ROUTING_CONFIG.md](TRAEFIK_ROUTING_CONFIG.md) — Configuración de enrutamiento con Traefik.
