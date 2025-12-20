@@ -4,7 +4,6 @@
 
 **Versión:** 1.0.0
 **Fecha:** 2024-12-19
-**Autor:** AI Assistant
 **Propósito:** Documentación completa de la configuración de Traefik para microservicios con routing path-based
 
 ---
@@ -142,12 +141,18 @@ graph TB
     end
 
     subgraph "🏗️ Servicios"
-        React[React App\nlocalhost/]
-        API[FastAPI\nlocalhost/api/*]
-        Dash[Dash App\nlocalhost/dash/*]
-        Prometheus[Prometheus\nlocalhost/prometheus/*]
-        Grafana[Grafana\nlocalhost/grafana/*]
-        Loki[Loki\nlocalhost/loki/*]
+        React[React App 
+        localhost/]
+        API[FastAPI
+        localhost/api/*]
+        Dash[Dash App
+        localhost/dash/*]
+        Prometheus[Prometheus
+        localhost/prometheus/*]
+        Grafana[Grafana
+        localhost/grafana/*]
+        Loki[Loki
+        localhost/loki/*]
     end
 
     Browser --> Router

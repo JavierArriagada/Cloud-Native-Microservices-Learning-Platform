@@ -25,8 +25,22 @@ Contacto
 
 ## Índice de la documentación (actual)
 
+### Planificación y Arquitectura
 - [MICROSERVICES_MASTER_PLAN.md](MICROSERVICES_MASTER_PLAN.md) — Documento maestro de planificación y arquitectura (arquitectura, stack, guías, diagramas).
+
+### Desarrollo
 - [CLAUDE_CODE_WORKFLOW.md](CLAUDE_CODE_WORKFLOW.md) — Flujo de trabajo con Claude Code: plugins, skills y mejores prácticas de desarrollo.
+- [DEVELOPMENT_CREDENTIALS.md](DEVELOPMENT_CREDENTIALS.md) — Credenciales y guía de acceso a servicios en ambiente de desarrollo.
+
+### Base de Datos
+- [DATABASE_SCHEMA_DESIGN.md](DATABASE_SCHEMA_DESIGN.md) — Diseño del esquema de base de datos.
+- [SETUP_DATABASE.md](SETUP_DATABASE.md) — Configuración inicial de la base de datos.
+- [ALEMBIC_GUIDE.md](ALEMBIC_GUIDE.md) — Guía para gestión de migraciones con Alembic.
+
+### Infraestructura
+- [TRAEFIK_ROUTING_CONFIG.md](TRAEFIK_ROUTING_CONFIG.md) — Configuración de enrutamiento con Traefik.
+
+### General
 - [README.md](/README.md) — Presentación del repo y resumen del proyecto.
 
 > Nota: este índice debe actualizarse cada vez que se añada un nuevo documento en `docs/`.

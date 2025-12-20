@@ -4,7 +4,6 @@
 
 **Versión:** 1.0.0
 **Fecha:** 2025-12-19
-**Autor:** AI Assistant
 **Propósito:** Guía completa para gestionar migraciones de base de datos con Alembic
 
 ---
