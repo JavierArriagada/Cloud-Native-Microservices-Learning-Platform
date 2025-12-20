@@ -10,6 +10,7 @@ python-multipart==0.0.6
 # Database
 asyncpg==0.29.0
 alembic==1.13.1
+sqlalchemy==2.0.25  # Solo para Alembic autogenerate, NO usar como ORM en runtime
 
 # Validation & Serialization
 pydantic==2.5.3

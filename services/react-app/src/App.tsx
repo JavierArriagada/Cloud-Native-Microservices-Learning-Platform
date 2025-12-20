@@ -62,6 +62,11 @@ function App() {
               </a>
             </li>
             <li>
+              <a href="/database" target="_blank" rel="noopener noreferrer">
+                🗄️ Database Manager (Adminer)
+              </a>
+            </li>
+            <li>
               <a href="/dash" target="_blank" rel="noopener noreferrer">
                 📊 Dashboard (Dash)
               </a>

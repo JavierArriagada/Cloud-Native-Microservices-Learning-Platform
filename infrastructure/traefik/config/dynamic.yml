@@ -28,6 +28,38 @@ http:
       service: dash-service
       priority: 90
 
+    # Database Admin (Adminer)
+    adminer-router:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/database`)"
+      service: adminer-service
+      priority: 80
+
+    # Prometheus
+    prometheus-router:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/prometheus`)"
+      service: prometheus-service
+      priority: 70
+
+    # Grafana
+    grafana-router:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/grafana`)"
+      service: grafana-service
+      priority: 70
+
+    # Loki
+    loki-router:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/loki`)"
+      service: loki-service
+      priority: 70
+
     # React Router (fallback)
     react-router:
       entryPoints:
@@ -63,6 +95,26 @@ http:
       loadBalancer:
         servers:
           - url: "http://mlp_react:3000"
+
+    adminer-service:
+      loadBalancer:
+        servers:
+          - url: "http://mlp_adminer:8080"
+
+    prometheus-service:
+      loadBalancer:
+        servers:
+          - url: "http://mlp_prometheus:9090"
+
+    grafana-service:
+      loadBalancer:
+        servers:
+          - url: "http://mlp_grafana:3000"
+
+    loki-service:
+      loadBalancer:
+        servers:
+          - url: "http://mlp_loki:3100"
 
 # =============================================================================
 # FIN DE DYNAMIC.YML

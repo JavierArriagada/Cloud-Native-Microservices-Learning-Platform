@@ -56,8 +56,13 @@ urls: ## Mostrar URLs de todos los servicios
 	@echo "    Dash Dashboard:    http://localhost/dash"
 	@echo ""
 	@echo "  $(YELLOW)Monitoring:$(NC)"
+	@echo "    Prometheus:        http://localhost/prometheus"
+	@echo "    Grafana:           http://localhost/grafana (admin/admin)"
+	@echo "    Loki:              http://localhost/loki"
+	@echo ""
+	@echo "  $(YELLOW)Monitoring (Direct Access):$(NC)"
 	@echo "    Prometheus:        http://localhost:9090"
-	@echo "    Grafana:           http://localhost:3001 (admin/admin)"
+	@echo "    Grafana:           http://localhost:3001"
 	@echo "    Loki:              http://localhost:3100"
 	@echo ""
 	@echo "  $(YELLOW)Database:$(NC)"
@@ -228,8 +233,9 @@ monitoring-up: ## Levantar stack de monitoreo
 	@echo "$(GREEN)📊 Levantando monitoreo...$(NC)"
 	docker compose -f $(COMPOSE_MONITORING) up -d
 	@echo "$(GREEN)✅ Monitoreo activo$(NC)"
-	@echo "  Prometheus: http://localhost:9090"
-	@echo "  Grafana:    http://localhost:3001"
+	@echo "  Prometheus: http://localhost/prometheus (or :9090)"
+	@echo "  Grafana:    http://localhost/grafana (or :3001)"
+	@echo "  Loki:       http://localhost/loki (or :3100)"
 
 monitoring-down: ## Detener monitoreo
 	docker compose -f $(COMPOSE_MONITORING) down

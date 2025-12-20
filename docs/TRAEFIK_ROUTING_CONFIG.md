@@ -390,15 +390,18 @@ app = FastAPI(root_path="/api")
 
 ```yaml
 prometheus:
+  command:
+    - '--web.route-prefix=/prometheus'
+    - '--web.external-url=http://localhost/prometheus'
   labels:
     - "traefik.enable=true"
     - "traefik.http.routers.prometheus.rule=Host(`localhost`) && PathPrefix(`/prometheus`)"
     - "traefik.http.routers.prometheus.entrypoints=web"
     - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-    - "traefik.http.middlewares.prometheus-stripprefix.stripprefix.prefixes=/prometheus"
-    - "traefik.http.routers.prometheus.middlewares=prometheus-stripprefix"
     - "traefik.http.routers.prometheus.priority=20"
 ```
+
+**Importante:** Prometheus requiere las opciones `--web.route-prefix` y `--web.external-url` para funcionar correctamente detrás de un proxy con sub-rutas. NO se debe usar stripprefix con Prometheus cuando está configurado de esta manera.
 
 ### 7.3 Grafana
 
@@ -412,10 +415,10 @@ grafana:
     - "traefik.http.routers.grafana.rule=Host(`localhost`) && PathPrefix(`/grafana`)"
     - "traefik.http.routers.grafana.entrypoints=web"
     - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-    - "traefik.http.middlewares.grafana-stripprefix.stripprefix.prefixes=/grafana"
-    - "traefik.http.routers.grafana.middlewares=grafana-stripprefix"
     - "traefik.http.routers.grafana.priority=20"
 ```
+
+**Importante:** Grafana tiene soporte nativo para sub-rutas mediante las variables de entorno `GF_SERVER_ROOT_URL` y `GF_SERVER_SERVE_FROM_SUB_PATH`. NO se debe usar stripprefix con Grafana cuando está configurado de esta manera.
 
 ### 7.4 Loki
 
@@ -426,10 +429,18 @@ loki:
     - "traefik.http.routers.loki.rule=Host(`localhost`) && PathPrefix(`/loki`)"
     - "traefik.http.routers.loki.entrypoints=web"
     - "traefik.http.services.loki.loadbalancer.server.port=3100"
-    - "traefik.http.middlewares.loki-stripprefix.stripprefix.prefixes=/loki"
-    - "traefik.http.routers.loki.middlewares=loki-stripprefix"
     - "traefik.http.routers.loki.priority=20"
 ```
+
+**Configuración de Loki (`loki-config.yml`):**
+```yaml
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  http_path_prefix: /loki
+```
+
+**Importante:** Loki soporta sub-rutas mediante la configuración `http_path_prefix` en su archivo de configuración. NO se debe usar stripprefix con Loki cuando está configurado de esta manera.
 
 ### 7.5 React (Frontend)
 

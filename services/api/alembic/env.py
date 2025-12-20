@@ -13,6 +13,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 # Import app config
 from app.config import settings
 
+# Import all SQLAlchemy models (SOLO para Alembic autogenerate)
+# IMPORTANTE: Estos modelos NO se usan en runtime, solo para migraciones
+from app.db_models import metadata as db_metadata
+
 # Alembic Config object
 config = context.config
 
@@ -24,9 +28,7 @@ if config.config_file_name is not None:
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("+asyncpg", ""))
 
 # Add MetaData object here for 'autogenerate' support
-# from app.models import Base
-# target_metadata = Base.metadata
-target_metadata = None
+target_metadata = db_metadata
 
 
 def run_migrations_offline() -> None:

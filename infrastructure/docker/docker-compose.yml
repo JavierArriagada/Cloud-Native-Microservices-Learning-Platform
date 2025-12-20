@@ -138,6 +138,29 @@ services:
     restart: unless-stopped
 
   # ===========================================================================
+  # DATABASE MANAGEMENT - Adminer
+  # ===========================================================================
+  adminer:
+    image: adminer:4.8.1
+    container_name: ${COMPOSE_PROJECT_NAME:-mlp}_adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: nette
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+      - frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.rule=Host(`localhost`) && PathPrefix(`/database`)"
+      - "traefik.http.routers.adminer.entrypoints=web"
+      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
+      - "traefik.http.routers.adminer.priority=15"
+    restart: unless-stopped
+
+  # ===========================================================================
   # API GATEWAY - Traefik
   # ===========================================================================
   traefik:

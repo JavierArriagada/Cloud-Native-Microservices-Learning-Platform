@@ -151,8 +151,6 @@ item = ItemCreate(
 # - Implement /health endpoint
 # - Add database connection validation
 #
-# 🤖 Generated with Claude Code
-# Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 
 # Opción 2: Commit + Push + PR
 /commit-push-pr
