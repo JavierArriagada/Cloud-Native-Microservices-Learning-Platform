@@ -18,6 +18,10 @@ pydantic==2.5.3
 pydantic-settings==2.1.0
 email-validator==2.1.0
 
+# Code Generation Tools
+sqlacodegen==3.0.0  # Para generar SQLAlchemy models de DB existente
+pydantic-sqlalchemy==0.0.9  # Para convertir SQLAlchemy -> Pydantic
+
 # Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4

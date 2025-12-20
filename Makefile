@@ -225,6 +225,27 @@ db-backup: ## Backup de base de datos
 	docker compose -f $(COMPOSE_FILE) exec postgres pg_dump -U mlp_user mlp_db > backup_$(shell date +%Y%m%d_%H%M%S).sql
 	@echo "$(GREEN)✅ Backup creado$(NC)"
 
+db-generate-model: ## Generar modelo SQLAlchemy desde DB (uso: make db-generate-model TABLE=tabla)
+	@echo "$(GREEN)🔧 Generando modelo SQLAlchemy para tabla '$(TABLE)'...$(NC)"
+	docker compose -f $(COMPOSE_FILE) exec api python scripts/generate_model.py $(TABLE)
+	@echo "$(GREEN)✅ Modelo generado. Recuerda importarlo en db_models/__init__.py$(NC)"
+
+db-generate-code: ## Generar Pydantic + Queries desde modelo (uso: make db-generate-code MODEL=modelo)
+	@echo "$(GREEN)⚡ Generando código para modelo '$(MODEL)'...$(NC)"
+	docker compose -f $(COMPOSE_FILE) exec api python scripts/generate_code.py $(MODEL)
+	@echo "$(GREEN)✅ Código generado. Recuerda actualizar los __init__.py$(NC)"
+
+db-generate-all: ## Workflow completo: modelo + código (uso: make db-generate-all TABLE=tabla)
+	@echo "$(GREEN)🚀 Generando todo para tabla '$(TABLE)'...$(NC)"
+	@$(MAKE) db-generate-model TABLE=$(TABLE)
+	@$(MAKE) db-generate-code MODEL=$(TABLE)
+	@echo "$(GREEN)✅ Todo generado!$(NC)"
+	@echo "$(YELLOW)📝 Próximos pasos:$(NC)"
+	@echo "  1. Revisar archivos generados"
+	@echo "  2. Actualizar imports en __init__.py"
+	@echo "  3. Crear migración: make db-migrate-create MSG='add $(TABLE) table'"
+	@echo "  4. Aplicar: make db-migrate"
+
 # =============================================================================
 # 📊 MONITOREO
 # =============================================================================
