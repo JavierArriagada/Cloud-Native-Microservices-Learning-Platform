@@ -1,8 +1,23 @@
 # =============================================================================
-# Cloud-Native Microservices Learning Platform - Makefile
+# Cloud-Native Microservices Learning Platform - Makefile Principal
 # =============================================================================
-# Descripción: Comandos centralizados para desarrollo, testing, deploy y ops
+# Descripción: Orquestación de comandos para todo el proyecto
 # Requisitos: Docker, Docker Compose v2, Make
+# Documentación: docs/makefiles/README.md
+# =============================================================================
+#
+# ESTRUCTURA DE MAKEFILES:
+#   - Makefile (este)              -> Comandos de orquestación del proyecto
+#   - services/api/Makefile        -> Comandos específicos de FastAPI
+#   - services/dash-app/Makefile   -> Comandos específicos de Dash
+#   - services/react-app/Makefile  -> Comandos específicos de React
+#   - infrastructure/Makefile      -> Comandos de infraestructura y monitoreo
+#
+# FILOSOFÍA:
+#   - Este Makefile orquesta comandos de alto nivel
+#   - Para desarrollo específico de un servicio, usar su Makefile
+#   - Soporta desarrollo con Docker (default) y local (Python/Node local)
+#
 # =============================================================================
 
 .PHONY: help
@@ -14,12 +29,20 @@ COMPOSE_DEV := infrastructure/docker/docker-compose.dev.yml
 COMPOSE_MONITORING := infrastructure/docker/docker-compose.monitoring.yml
 PROJECT_NAME := mlp
 
+# Paths a Makefiles de servicios
+API_DIR := services/api
+DASH_DIR := services/dash-app
+REACT_DIR := services/react-app
+INFRA_DIR := infrastructure
+
 # Colores para output
 RED := \033[0;31m
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
 BLUE := \033[0;34m
-NC := \033[0m # No Color
+MAGENTA := \033[0;35m
+CYAN := \033[0;36m
+NC := \033[0m
 
 # =============================================================================
 # 📋 AYUDA Y UTILIDADES
@@ -30,8 +53,25 @@ help: ## Mostrar esta ayuda
 	@echo "$(GREEN)  Cloud-Native Microservices Learning Platform$(NC)"
 	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
 	@echo ""
+	@echo "$(CYAN)📚 COMANDOS PRINCIPALES:$(NC)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
+		grep -v "SERVICE\|INFRA" | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-25s$(NC) %s\n", $$1, $$2}'
+	@echo ""
+	@echo "$(CYAN)🔧 COMANDOS DE SERVICIOS INDIVIDUALES:$(NC)"
+	@echo "  $(YELLOW)make api-*$(NC)              Comandos del servicio FastAPI"
+	@echo "  $(YELLOW)make dash-*$(NC)             Comandos del servicio Dash"
+	@echo "  $(YELLOW)make react-*$(NC)            Comandos del servicio React"
+	@echo "  $(YELLOW)make infra-*$(NC)            Comandos de infraestructura"
+	@echo ""
+	@echo "$(CYAN)📖 DOCUMENTACIÓN:$(NC)"
+	@echo "  Para ver comandos específicos de cada servicio:"
+	@echo "    $(YELLOW)cd services/api && make help$(NC)"
+	@echo "    $(YELLOW)cd services/dash-app && make help$(NC)"
+	@echo "    $(YELLOW)cd services/react-app && make help$(NC)"
+	@echo "    $(YELLOW)cd infrastructure && make help$(NC)"
+	@echo ""
+	@echo "  Documentación completa: $(CYAN)docs/makefiles/README.md$(NC)"
 	@echo ""
 
 check-deps: ## Verificar prerequisitos instalados
@@ -46,31 +86,26 @@ urls: ## Mostrar URLs de todos los servicios
 	@echo "$(GREEN)  URLs de Servicios$(NC)"
 	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
 	@echo ""
-	@echo "  $(YELLOW)Gateway & Frontend:$(NC)"
-	@echo "    React App:         http://localhost"
-	@echo "    Traefik Dashboard: http://localhost:8080"
+	@echo "  $(CYAN)Gateway & Frontend:$(NC)"
+	@echo "    React App:         $(YELLOW)http://localhost$(NC)"
+	@echo "    Traefik Dashboard: $(YELLOW)http://localhost:8080$(NC)"
 	@echo ""
-	@echo "  $(YELLOW)Backend Services:$(NC)"
-	@echo "    FastAPI:           http://localhost/api"
-	@echo "    FastAPI Docs:      http://localhost/api/docs"
-	@echo "    Dash Dashboard:    http://localhost/dash"
+	@echo "  $(CYAN)Backend Services:$(NC)"
+	@echo "    FastAPI:           $(YELLOW)http://localhost/api$(NC)"
+	@echo "    FastAPI Docs:      $(YELLOW)http://localhost/api/docs$(NC)"
+	@echo "    Dash Dashboard:    $(YELLOW)http://localhost/dash$(NC)"
 	@echo ""
-	@echo "  $(YELLOW)Monitoring:$(NC)"
-	@echo "    Prometheus:        http://localhost/prometheus"
-	@echo "    Grafana:           http://localhost/grafana (admin/admin)"
-	@echo "    Loki:              http://localhost/loki"
+	@echo "  $(CYAN)Monitoring:$(NC)"
+	@echo "    Prometheus:        $(YELLOW)http://localhost/prometheus$(NC) (or :9090)"
+	@echo "    Grafana:           $(YELLOW)http://localhost/grafana$(NC) (or :3001) - admin/admin"
+	@echo "    Loki:              $(YELLOW)http://localhost/loki$(NC) (or :3100)"
 	@echo ""
-	@echo "  $(YELLOW)Monitoring (Direct Access):$(NC)"
-	@echo "    Prometheus:        http://localhost:9090"
-	@echo "    Grafana:           http://localhost:3001"
-	@echo "    Loki:              http://localhost:3100"
-	@echo ""
-	@echo "  $(YELLOW)Database:$(NC)"
-	@echo "    PostgreSQL:        localhost:5432"
+	@echo "  $(CYAN)Database:$(NC)"
+	@echo "    PostgreSQL:        $(YELLOW)localhost:5432$(NC)"
 	@echo ""
 
 # =============================================================================
-# 🚀 DESARROLLO LOCAL
+# 🚀 DESARROLLO - ORQUESTACIÓN COMPLETA
 # =============================================================================
 
 dev-up: ## Levantar todos los servicios en desarrollo
@@ -95,23 +130,111 @@ dev-restart: ## Reiniciar todos los servicios
 dev-logs: ## Ver logs de todos los servicios
 	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) logs -f
 
-dev-logs-api: ## Ver logs solo de API
-	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) logs -f api
-
-dev-logs-dash: ## Ver logs solo de Dash
-	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) logs -f dash
-
-dev-logs-react: ## Ver logs solo de React
-	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) logs -f react
-
 dev-status: ## Ver estado de containers
+	@echo "$(CYAN)Estado de servicios:$(NC)"
 	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) ps
 
-dev-shell-api: ## Abrir shell en container API
-	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) exec api /bin/sh
+dev-full: ## Levantar servicios + monitoreo
+	@$(MAKE) dev-up
+	@$(MAKE) monitoring-up
+	@echo "$(GREEN)✅ Stack completo activo$(NC)"
 
-dev-shell-dash: ## Abrir shell en container Dash
-	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) exec dash /bin/sh
+# =============================================================================
+# 🐳 SERVICIOS INDIVIDUALES - API (FastAPI)
+# =============================================================================
+
+api-dev: ## [SERVICE] Levantar solo API en Docker
+	@$(MAKE) -C $(API_DIR) dev
+
+api-stop: ## [SERVICE] Detener API
+	@$(MAKE) -C $(API_DIR) stop
+
+api-logs: ## [SERVICE] Ver logs de API
+	@$(MAKE) -C $(API_DIR) logs
+
+api-shell: ## [SERVICE] Shell en container API
+	@$(MAKE) -C $(API_DIR) shell
+
+api-test: ## [SERVICE] Tests de API
+	@$(MAKE) -C $(API_DIR) test
+
+api-local: ## [SERVICE] Ejecutar API en modo local (Python)
+	@echo "$(CYAN)💡 Ejecutando API en modo local...$(NC)"
+	@$(MAKE) -C $(API_DIR) local-dev
+
+api-setup: ## [SERVICE] Setup entorno local de API
+	@$(MAKE) -C $(API_DIR) local-setup
+
+# =============================================================================
+# 🐳 SERVICIOS INDIVIDUALES - DASH
+# =============================================================================
+
+dash-dev: ## [SERVICE] Levantar solo Dash en Docker
+	@$(MAKE) -C $(DASH_DIR) dev
+
+dash-stop: ## [SERVICE] Detener Dash
+	@$(MAKE) -C $(DASH_DIR) stop
+
+dash-logs: ## [SERVICE] Ver logs de Dash
+	@$(MAKE) -C $(DASH_DIR) logs
+
+dash-shell: ## [SERVICE] Shell en container Dash
+	@$(MAKE) -C $(DASH_DIR) shell
+
+dash-local: ## [SERVICE] Ejecutar Dash en modo local (Python)
+	@echo "$(CYAN)💡 Ejecutando Dash en modo local...$(NC)"
+	@$(MAKE) -C $(DASH_DIR) local-dev
+
+dash-setup: ## [SERVICE] Setup entorno local de Dash
+	@$(MAKE) -C $(DASH_DIR) local-setup
+
+# =============================================================================
+# 🐳 SERVICIOS INDIVIDUALES - REACT
+# =============================================================================
+
+react-dev: ## [SERVICE] Levantar solo React en Docker
+	@$(MAKE) -C $(REACT_DIR) dev
+
+react-stop: ## [SERVICE] Detener React
+	@$(MAKE) -C $(REACT_DIR) stop
+
+react-logs: ## [SERVICE] Ver logs de React
+	@$(MAKE) -C $(REACT_DIR) logs
+
+react-shell: ## [SERVICE] Shell en container React
+	@$(MAKE) -C $(REACT_DIR) shell
+
+react-test: ## [SERVICE] Tests de React
+	@$(MAKE) -C $(REACT_DIR) test
+
+react-local: ## [SERVICE] Ejecutar React en modo local (Node.js)
+	@echo "$(CYAN)💡 Ejecutando React en modo local...$(NC)"
+	@$(MAKE) -C $(REACT_DIR) local-dev
+
+react-setup: ## [SERVICE] Setup entorno local de React
+	@$(MAKE) -C $(REACT_DIR) local-setup
+
+# =============================================================================
+# 📊 INFRAESTRUCTURA Y MONITOREO
+# =============================================================================
+
+monitoring-up: ## [INFRA] Levantar stack de monitoreo
+	@$(MAKE) -C $(INFRA_DIR) monitoring-up
+
+monitoring-down: ## [INFRA] Detener monitoreo
+	@$(MAKE) -C $(INFRA_DIR) monitoring-down
+
+monitoring-logs: ## [INFRA] Ver logs de monitoreo
+	@$(MAKE) -C $(INFRA_DIR) monitoring-logs
+
+infra-health: ## [INFRA] Health check de todos los servicios
+	@$(MAKE) -C $(INFRA_DIR) health-all
+
+infra-stats: ## [INFRA] Ver estadísticas de containers
+	@$(MAKE) -C $(INFRA_DIR) docker-stats
+
+infra-network: ## [INFRA] Diagnosticar redes
+	@$(MAKE) -C $(INFRA_DIR) network-ls
 
 # =============================================================================
 # 🔨 BUILD
@@ -142,50 +265,32 @@ rebuild: dev-down build dev-up ## Rebuild completo y restart
 
 test: ## Ejecutar todos los tests
 	@echo "$(GREEN)🧪 Ejecutando tests...$(NC)"
-	@$(MAKE) test-api
-	@$(MAKE) test-react
+	@$(MAKE) -C $(API_DIR) test
+	@$(MAKE) -C $(REACT_DIR) test
 	@echo "$(GREEN)✅ Todos los tests pasaron$(NC)"
 
-test-api: ## Tests de API
-	@echo "$(YELLOW)Testing API...$(NC)"
-	docker compose -f $(COMPOSE_FILE) run --rm api pytest tests/ -v
-
-test-react: ## Tests de React
-	@echo "$(YELLOW)Testing React...$(NC)"
-	docker compose -f $(COMPOSE_FILE) run --rm react npm test
-
-test-integration: ## Tests de integración
-	@echo "$(YELLOW)Tests de integración...$(NC)"
-	docker compose -f $(COMPOSE_FILE) run --rm api pytest tests/integration/ -v
-
 test-coverage: ## Tests con coverage
-	docker compose -f $(COMPOSE_FILE) run --rm api pytest --cov=app --cov-report=html tests/
+	@$(MAKE) -C $(API_DIR) test-cov
+	@$(MAKE) -C $(REACT_DIR) test-coverage
 
 lint: ## Verificar código (lint)
 	@echo "$(GREEN)🔍 Verificando código...$(NC)"
-	@$(MAKE) lint-api
-	@$(MAKE) lint-react
+	@$(MAKE) -C $(API_DIR) lint
+	@$(MAKE) -C $(DASH_DIR) lint
+	@$(MAKE) -C $(REACT_DIR) lint
 	@echo "$(GREEN)✅ Lint completado$(NC)"
-
-lint-api: ## Lint API Python
-	@echo "$(YELLOW)Linting API...$(NC)"
-	docker compose -f $(COMPOSE_FILE) run --rm api ruff check .
-	docker compose -f $(COMPOSE_FILE) run --rm api black --check .
-
-lint-react: ## Lint React TypeScript
-	@echo "$(YELLOW)Linting React...$(NC)"
-	docker compose -f $(COMPOSE_FILE) run --rm react npm run lint
 
 lint-fix: ## Auto-corregir problemas de lint
 	@echo "$(GREEN)🔧 Auto-corrigiendo...$(NC)"
-	docker compose -f $(COMPOSE_FILE) run --rm api ruff check --fix .
-	docker compose -f $(COMPOSE_FILE) run --rm api black .
-	docker compose -f $(COMPOSE_FILE) run --rm react npm run lint:fix
+	@$(MAKE) -C $(API_DIR) lint-fix
+	@$(MAKE) -C $(DASH_DIR) lint-fix
+	@$(MAKE) -C $(REACT_DIR) lint-fix
 
 format: ## Formatear código
 	@echo "$(GREEN)✨ Formateando código...$(NC)"
-	docker compose -f $(COMPOSE_FILE) run --rm api black .
-	docker compose -f $(COMPOSE_FILE) run --rm react npm run format
+	@$(MAKE) -C $(API_DIR) format
+	@$(MAKE) -C $(DASH_DIR) format
+	@$(MAKE) -C $(REACT_DIR) format
 
 # =============================================================================
 # 🐘 DATABASE
@@ -195,22 +300,16 @@ db-shell: ## Conectar a PostgreSQL via psql
 	docker compose -f $(COMPOSE_FILE) exec postgres psql -U mlp_user -d mlp_db
 
 db-migrate: ## Ejecutar migraciones
-	@echo "$(GREEN)📦 Ejecutando migraciones...$(NC)"
-	docker compose -f $(COMPOSE_FILE) exec api alembic upgrade head
+	@$(MAKE) -C $(API_DIR) db-migrate
 
 db-migrate-create: ## Crear nueva migración (uso: make db-migrate-create MSG="mensaje")
-	@echo "$(GREEN)📝 Creando migración...$(NC)"
-	docker compose -f $(COMPOSE_FILE) exec api alembic revision --autogenerate -m "$(MSG)"
+	@$(MAKE) -C $(API_DIR) db-migrate-create MSG="$(MSG)"
 
 db-migrate-down: ## Revertir última migración
-	docker compose -f $(COMPOSE_FILE) exec api alembic downgrade -1
-
-db-migrate-history: ## Ver historial de migraciones
-	docker compose -f $(COMPOSE_FILE) exec api alembic history
+	@$(MAKE) -C $(API_DIR) db-migrate-down
 
 db-seed: ## Cargar datos de ejemplo
-	@echo "$(GREEN)🌱 Cargando datos de ejemplo...$(NC)"
-	docker compose -f $(COMPOSE_FILE) exec api python -m scripts.seed_data
+	@$(MAKE) -C $(API_DIR) db-seed
 
 db-reset: ## Reset completo de base de datos (¡PELIGRO!)
 	@echo "$(RED)⚠️  ADVERTENCIA: Esto eliminará todos los datos$(NC)"
@@ -225,83 +324,28 @@ db-backup: ## Backup de base de datos
 	docker compose -f $(COMPOSE_FILE) exec postgres pg_dump -U mlp_user mlp_db > backup_$(shell date +%Y%m%d_%H%M%S).sql
 	@echo "$(GREEN)✅ Backup creado$(NC)"
 
-db-generate-model: ## Generar modelo SQLAlchemy desde DB (uso: make db-generate-model TABLE=tabla)
-	@echo "$(GREEN)🔧 Generando modelo SQLAlchemy para tabla '$(TABLE)'...$(NC)"
-	docker compose -f $(COMPOSE_FILE) exec api python scripts/generate_model.py $(TABLE)
-	@echo "$(GREEN)✅ Modelo generado. Recuerda importarlo en db_models/__init__.py$(NC)"
-
-db-generate-code: ## Generar Pydantic + Queries desde modelo (uso: make db-generate-code MODEL=modelo)
-	@echo "$(GREEN)⚡ Generando código para modelo '$(MODEL)'...$(NC)"
-	docker compose -f $(COMPOSE_FILE) exec api python scripts/generate_code.py $(MODEL)
-	@echo "$(GREEN)✅ Código generado. Recuerda actualizar los __init__.py$(NC)"
-
-db-generate-all: ## Workflow completo: modelo + código (uso: make db-generate-all TABLE=tabla)
-	@echo "$(GREEN)🚀 Generando todo para tabla '$(TABLE)'...$(NC)"
-	@$(MAKE) db-generate-model TABLE=$(TABLE)
-	@$(MAKE) db-generate-code MODEL=$(TABLE)
-	@echo "$(GREEN)✅ Todo generado!$(NC)"
-	@echo "$(YELLOW)📝 Próximos pasos:$(NC)"
-	@echo "  1. Revisar archivos generados"
-	@echo "  2. Actualizar imports en __init__.py"
-	@echo "  3. Crear migración: make db-migrate-create MSG='add $(TABLE) table'"
-	@echo "  4. Aplicar: make db-migrate"
-
-# =============================================================================
-# 📊 MONITOREO
-# =============================================================================
-
-monitoring-up: ## Levantar stack de monitoreo
-	@echo "$(GREEN)📊 Levantando monitoreo...$(NC)"
-	docker compose -f $(COMPOSE_MONITORING) up -d
-	@echo "$(GREEN)✅ Monitoreo activo$(NC)"
-	@echo "  Prometheus: http://localhost/prometheus (or :9090)"
-	@echo "  Grafana:    http://localhost/grafana (or :3001)"
-	@echo "  Loki:       http://localhost/loki (or :3100)"
-
-monitoring-down: ## Detener monitoreo
-	docker compose -f $(COMPOSE_MONITORING) down
-
-monitoring-logs: ## Ver logs de monitoreo
-	docker compose -f $(COMPOSE_MONITORING) logs -f
-
-monitoring-restart: ## Reiniciar monitoreo
-	@$(MAKE) monitoring-down
-	@$(MAKE) monitoring-up
-
 # =============================================================================
 # ☁️ CLOUD / KUBERNETES
 # =============================================================================
 
 k8s-context: ## Ver contexto actual de Kubernetes
-	kubectl config current-context
+	@$(MAKE) -C $(INFRA_DIR) k8s-context
 
 k8s-apply-dev: ## Aplicar manifests a cluster dev
-	kubectl apply -k infrastructure/kubernetes/overlays/staging
+	@$(MAKE) -C $(INFRA_DIR) k8s-apply-dev
 
 k8s-apply-prod: ## Aplicar manifests a producción
-	kubectl apply -k infrastructure/kubernetes/overlays/production
-
-k8s-delete-dev: ## Eliminar recursos de dev
-	kubectl delete -k infrastructure/kubernetes/overlays/staging
+	@$(MAKE) -C $(INFRA_DIR) k8s-apply-prod
 
 k8s-status: ## Ver estado de pods
-	kubectl get pods -n mlp
+	@$(MAKE) -C $(INFRA_DIR) k8s-pods
 
-k8s-logs: ## Ver logs de pod (uso: make k8s-logs POD=nombre-pod)
-	kubectl logs -f $(POD) -n mlp
-
-k8s-shell: ## Shell en pod (uso: make k8s-shell POD=nombre-pod)
-	kubectl exec -it $(POD) -n mlp -- /bin/sh
-
-k8s-port-forward: ## Port forward API (8000:8000)
-	kubectl port-forward -n mlp service/api 8000:8000
-
-deploy-staging: ## Deploy a staging (GCP)
+deploy-staging: ## Deploy a staging
 	@echo "$(GREEN)🚀 Deploying a staging...$(NC)"
 	@$(MAKE) k8s-apply-dev
 	@echo "$(GREEN)✅ Deploy a staging completado$(NC)"
 
-deploy-prod: ## Deploy a producción (GCP)
+deploy-prod: ## Deploy a producción
 	@echo "$(RED)⚠️  Deploy a PRODUCCIÓN$(NC)"
 	@read -p "¿Confirmas deploy a PRODUCCIÓN? [y/N]: " confirm && [ "$$confirm" = "y" ] || exit 1
 	@$(MAKE) k8s-apply-prod
@@ -311,21 +355,25 @@ deploy-prod: ## Deploy a producción (GCP)
 # 🧹 LIMPIEZA
 # =============================================================================
 
-clean: ## Limpiar containers, volumes y build artifacts
+clean: ## Limpiar containers y volumes
 	@echo "$(YELLOW)🧹 Limpiando...$(NC)"
 	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) down -v
 	docker compose -f $(COMPOSE_MONITORING) down -v
 	@echo "$(GREEN)✅ Limpieza completada$(NC)"
 
-clean-volumes: ## Eliminar solo volumes
-	docker compose -f $(COMPOSE_FILE) down -v
+clean-services: ## Limpiar entornos locales de servicios
+	@echo "$(YELLOW)Limpiando entornos locales...$(NC)"
+	@$(MAKE) -C $(API_DIR) local-clean
+	@$(MAKE) -C $(DASH_DIR) local-clean
+	@$(MAKE) -C $(REACT_DIR) local-clean
 
 clean-images: ## Eliminar imágenes del proyecto
-	docker rmi $(shell docker images -q '$(PROJECT_NAME)/*') 2>/dev/null || true
+	@$(MAKE) -C $(INFRA_DIR) docker-images-rm
 
-clean-all: ## Limpieza profunda (containers, volumes, images)
+clean-all: ## Limpieza profunda (containers, volumes, images, entornos locales)
 	@echo "$(RED)⚠️  Limpieza profunda$(NC)"
 	@$(MAKE) clean
+	@$(MAKE) clean-services
 	@$(MAKE) clean-images
 	docker system prune -f
 
@@ -342,7 +390,7 @@ ci-local: ## Simular pipeline CI localmente
 
 pre-commit: ## Ejecutar checks pre-commit
 	@$(MAKE) lint
-	@$(MAKE) test-api
+	@$(MAKE) -C $(API_DIR) test
 
 # =============================================================================
 # 📦 DOCKER REGISTRY
@@ -364,37 +412,32 @@ docker-pull: ## Pull imágenes desde registry
 # =============================================================================
 
 debug-network: ## Ver redes Docker
-	docker network ls
-	docker network inspect $(PROJECT_NAME)_frontend || true
-	docker network inspect $(PROJECT_NAME)_backend || true
+	@$(MAKE) -C $(INFRA_DIR) network-ls
 
 debug-volumes: ## Ver volumes Docker
-	docker volume ls | grep $(PROJECT_NAME)
-
-debug-api: ## Debug API (adjunta debugger)
-	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) run --rm --service-ports api
+	@$(MAKE) -C $(INFRA_DIR) docker-volumes-ls
 
 debug-env: ## Mostrar variables de entorno
 	@echo "$(BLUE)Variables de entorno desde .env:$(NC)"
 	@cat .env 2>/dev/null || echo "$(RED).env no existe$(NC)"
 
 health-check: ## Verificar health de todos los servicios
-	@echo "$(GREEN)🏥 Verificando salud de servicios...$(NC)"
-	@curl -s http://localhost/api/health | jq . || echo "$(RED)API no responde$(NC)"
-	@curl -s http://localhost:9090/-/healthy || echo "$(RED)Prometheus no responde$(NC)"
-	@curl -s http://localhost:3001/api/health || echo "$(RED)Grafana no responde$(NC)"
+	@$(MAKE) -C $(INFRA_DIR) health-all
 
 # =============================================================================
 # 📝 DOCUMENTACIÓN
 # =============================================================================
 
 docs-serve: ## Servir documentación local
-	@echo "$(GREEN)📖 Sirviendo documentación...$(NC)"
+	@echo "$(GREEN)📖 Sirviendo documentación en http://localhost:8888...$(NC)"
 	@command -v python3 >/dev/null 2>&1 && cd docs && python3 -m http.server 8888 || echo "$(RED)Python no instalado$(NC)"
 
 docs-api: ## Abrir API docs en browser
 	@echo "$(GREEN)Abriendo API docs...$(NC)"
 	xdg-open http://localhost/api/docs 2>/dev/null || open http://localhost/api/docs 2>/dev/null || echo "Abrir manualmente: http://localhost/api/docs"
+
+docs-makefiles: ## Abrir documentación de Makefiles
+	@echo "$(CYAN)Documentación de Makefiles: docs/makefiles/README.md$(NC)"
 
 # =============================================================================
 # 🎯 WORKFLOWS COMPLETOS
@@ -412,6 +455,14 @@ first-run: check-deps ## Primera ejecución del proyecto
 	@echo "$(GREEN)✅ Configuración inicial completa$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Siguiente paso: make dev-up$(NC)"
+	@echo "$(YELLOW)O para modo local: make api-setup && make react-setup$(NC)"
+
+setup-local-all: ## Setup entornos locales de todos los servicios
+	@echo "$(GREEN)🔧 Configurando entornos locales...$(NC)"
+	@$(MAKE) -C $(API_DIR) local-setup
+	@$(MAKE) -C $(DASH_DIR) local-setup
+	@$(MAKE) -C $(REACT_DIR) local-setup
+	@echo "$(GREEN)✅ Todos los entornos locales configurados$(NC)"
 
 reset-project: ## Reset completo del proyecto
 	@echo "$(RED)⚠️  ADVERTENCIA: Reset completo del proyecto$(NC)"
@@ -419,6 +470,20 @@ reset-project: ## Reset completo del proyecto
 	@$(MAKE) clean-all
 	@$(MAKE) first-run
 	@echo "$(GREEN)✅ Proyecto reseteado$(NC)"
+
+# =============================================================================
+# 📊 STATUS Y MONITORING
+# =============================================================================
+
+status: ## Ver estado completo del proyecto
+	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
+	@echo "$(GREEN)  Estado del Proyecto$(NC)"
+	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
+	@echo ""
+	@$(MAKE) dev-status
+	@echo ""
+	@$(MAKE) health-check
+	@echo ""
 
 # =============================================================================
 # FIN DEL MAKEFILE
