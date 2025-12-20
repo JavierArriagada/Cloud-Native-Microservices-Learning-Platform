@@ -14,8 +14,8 @@ PYTHON := python3
 PIP := pip3
 VENV := venv
 DOCKER_COMPOSE := docker compose
-COMPOSE_FILE := ../../infrastructure/docker/docker-compose.yml
-COMPOSE_DEV := ../../infrastructure/docker/docker-compose.dev.yml
+COMPOSE_FILE := infrastructure/docker/docker-compose.yml
+COMPOSE_DEV := infrastructure/docker/docker-compose.dev.yml
 
 # Colores
 RED := \033[0;31m

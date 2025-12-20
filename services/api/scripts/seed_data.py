@@ -204,6 +204,166 @@ async def seed_sample_users(conn: asyncpg.Connection):
         print(f"✅ {created_count} usuarios de ejemplo creados")
 
 
+async def seed_audit_logs(conn: asyncpg.Connection):
+    """Crear audit logs de ejemplo para testing"""
+    print("\n📝 Creando audit logs de ejemplo...")
+
+    # Obtener admin user ID
+    admin_query = "SELECT id FROM users WHERE email = 'admin@example.com' LIMIT 1"
+    admin = await conn.fetchrow(admin_query)
+
+    if not admin:
+        print("  ⚠️  Usuario admin no encontrado. Ejecuta seed_admin_user primero.")
+        return
+
+    admin_id = admin["id"]
+
+    # Audit logs de ejemplo
+    audit_logs = [
+        # Login exitoso
+        (
+            admin_id,
+            "LOGIN",
+            None,
+            None,
+            "Admin user logged in successfully",
+            {"browser": "Chrome", "os": "Linux"},
+            "127.0.0.1",
+            "Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0.0.0"
+        ),
+        # Creación de usuario
+        (
+            admin_id,
+            "CREATE",
+            "users",
+            None,  # Would be actual user_id in real scenario
+            "Created new user account",
+            {"username": "test_user", "email": "test@example.com"},
+            "127.0.0.1",
+            "Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0.0.0"
+        ),
+        # Cambio de configuración
+        (
+            admin_id,
+            "CONFIG_CHANGE",
+            "system",
+            None,
+            "Updated system settings",
+            {"setting": "max_upload_size", "old_value": "10MB", "new_value": "20MB"},
+            "127.0.0.1",
+            "Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0.0.0"
+        ),
+        # Error del sistema (sin user_id)
+        (
+            None,
+            "ERROR",
+            "system",
+            None,
+            "Database connection timeout",
+            {"error_code": "DB_TIMEOUT", "duration_ms": 5000},
+            None,
+            None
+        ),
+        # Warning del sistema
+        (
+            None,
+            "WARNING",
+            "system",
+            None,
+            "High memory usage detected",
+            {"memory_usage_percent": 85, "threshold": 80},
+            None,
+            None
+        ),
+        # Login fallido
+        (
+            None,
+            "LOGIN_FAILED",
+            None,
+            None,
+            "Failed login attempt for user: admin@example.com",
+            {"reason": "invalid_password", "attempts": 3},
+            "192.168.1.100",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Firefox/120.0"
+        ),
+        # Update de usuario
+        (
+            admin_id,
+            "UPDATE",
+            "users",
+            None,
+            "Updated user profile information",
+            {"fields_updated": ["first_name", "last_name"], "username": "admin"},
+            "127.0.0.1",
+            "Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0.0.0"
+        ),
+        # Info del sistema
+        (
+            None,
+            "INFO",
+            "system",
+            None,
+            "Database backup completed successfully",
+            {"backup_size_mb": 250, "duration_seconds": 45},
+            None,
+            None
+        ),
+    ]
+
+    import json
+    created_count = 0
+
+    for user_id, action, entity_type, entity_id, description, extra_data, ip, user_agent in audit_logs:
+        # Check if similar audit log exists (para no duplicar en re-runs)
+        check_query = """
+            SELECT id FROM audit_logs
+            WHERE action = $1 AND description = $2
+            LIMIT 1
+        """
+        existing = await conn.fetchrow(check_query, action, description)
+
+        if existing:
+            continue
+
+        # Create audit log
+        import uuid as uuid_lib
+        create_query = """
+            INSERT INTO audit_logs (
+                id,
+                user_id,
+                action,
+                entity_type,
+                entity_id,
+                description,
+                extra_data,
+                ip_address,
+                user_agent
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING id, action, description
+        """
+
+        log = await conn.fetchrow(
+            create_query,
+            uuid_lib.uuid4(),
+            user_id,
+            action,
+            entity_type,
+            entity_id,
+            description,
+            json.dumps(extra_data) if extra_data else None,
+            ip,
+            user_agent
+        )
+        print(f"  ✅ Audit log creado: {log['action']} - {log['description'][:50]}...")
+        created_count += 1
+
+    if created_count > 0:
+        print(f"✅ {created_count} audit logs creados")
+    else:
+        print("ℹ️  Todos los audit logs ya existían")
+
+
 async def main():
     """Main function"""
     print("=" * 70)
@@ -224,6 +384,9 @@ async def main():
 
         # Uncomment to create sample users
         # await seed_sample_users(conn)
+
+        # Seed audit logs (para testing)
+        await seed_audit_logs(conn)
 
         print()
         print("=" * 70)

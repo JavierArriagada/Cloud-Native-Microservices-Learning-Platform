@@ -1,0 +1,298 @@
+# =============================================================================
+# Database Operations Makefile
+# =============================================================================
+# Descripción: Comandos especializados para operaciones de base de datos
+# Uso: make -f Makefile.database <comando>
+# O incluir desde Makefile principal
+# =============================================================================
+
+.PHONY: help
+.DEFAULT_GOAL := help
+
+# Colores
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+BLUE := \033[0;34m
+RED := \033[0;31m
+NC := \033[0m
+
+# =============================================================================
+# 📋 AYUDA
+# =============================================================================
+
+help: ## Mostrar esta ayuda
+	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
+	@echo "$(GREEN)  Database Operations - Comandos Disponibles$(NC)"
+	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-30s$(NC) %s\n", $$1, $$2}'
+	@echo ""
+
+# =============================================================================
+# 🔄 MIGRACIONES
+# =============================================================================
+
+db-migrate: ## Aplicar migraciones pendientes
+	@echo "$(GREEN)⬆️  Aplicando migraciones...$(NC)"
+	docker compose exec api alembic upgrade head
+	@echo "$(GREEN)✅ Migraciones aplicadas$(NC)"
+
+db-migrate-create: ## Crear nueva migración (uso: make db-migrate-create MSG="mensaje")
+	@if [ -z "$(MSG)" ]; then \
+		echo "$(RED)❌ Error: Debes proporcionar MSG$(NC)"; \
+		echo "$(YELLOW)Uso: make db-migrate-create MSG='add users table'$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)📝 Creando migración: $(MSG)$(NC)"
+	docker compose exec api alembic revision --autogenerate -m "$(MSG)"
+	@echo "$(GREEN)✅ Migración creada$(NC)"
+	@echo "$(YELLOW)⚠️  Revisa el archivo generado en services/api/alembic/versions/$(NC)"
+
+db-migrate-down: ## Revertir última migración
+	@echo "$(YELLOW)⬇️  Revirtiendo última migración...$(NC)"
+	docker compose exec api alembic downgrade -1
+	@echo "$(GREEN)✅ Migración revertida$(NC)"
+
+db-migrate-history: ## Ver historial de migraciones
+	@echo "$(BLUE)📜 Historial de migraciones:$(NC)"
+	docker compose exec api alembic history --verbose
+
+db-migrate-current: ## Ver migración actual
+	@echo "$(BLUE)📍 Migración actual:$(NC)"
+	docker compose exec api alembic current -v
+
+db-migrate-show-sql: ## Ver SQL de próxima migración sin aplicar
+	@echo "$(BLUE)🔍 SQL de próxima migración:$(NC)"
+	docker compose exec api alembic upgrade head --sql
+
+# =============================================================================
+# 🌱 SEED DATA
+# =============================================================================
+
+db-seed: ## Cargar datos de ejemplo
+	@echo "$(GREEN)🌱 Cargando seed data...$(NC)"
+	docker compose exec api python -m scripts.seed_data
+	@echo "$(GREEN)✅ Seed data cargado$(NC)"
+
+# =============================================================================
+# 🔍 INSPECCIÓN
+# =============================================================================
+
+db-shell: ## Conectar a PostgreSQL via psql
+	@echo "$(BLUE)🐘 Conectando a PostgreSQL...$(NC)"
+	docker compose exec postgres psql -U mlp_user -d mlp_db
+
+db-tables: ## Listar todas las tablas
+	@echo "$(BLUE)📋 Tablas en la base de datos:$(NC)"
+	@docker compose exec postgres psql -U mlp_user -d mlp_db -c "\dt"
+
+db-describe: ## Describir estructura de una tabla (uso: make db-describe TABLE=users)
+	@if [ -z "$(TABLE)" ]; then \
+		echo "$(RED)❌ Error: Debes proporcionar TABLE$(NC)"; \
+		echo "$(YELLOW)Uso: make db-describe TABLE=users$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)🔍 Estructura de tabla $(TABLE):$(NC)"
+	@docker compose exec postgres psql -U mlp_user -d mlp_db -c "\d $(TABLE)"
+
+db-count: ## Contar registros en una tabla (uso: make db-count TABLE=users)
+	@if [ -z "$(TABLE)" ]; then \
+		echo "$(RED)❌ Error: Debes proporcionar TABLE$(NC)"; \
+		echo "$(YELLOW)Uso: make db-count TABLE=users$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)🔢 Contando registros en $(TABLE):$(NC)"
+	@docker compose exec postgres psql -U mlp_user -d mlp_db -c "SELECT COUNT(*) as total FROM $(TABLE);"
+
+db-indexes: ## Ver índices de una tabla (uso: make db-indexes TABLE=users)
+	@if [ -z "$(TABLE)" ]; then \
+		echo "$(RED)❌ Error: Debes proporcionar TABLE$(NC)"; \
+		echo "$(YELLOW)Uso: make db-indexes TABLE=users$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)📑 Índices de tabla $(TABLE):$(NC)"
+	@docker compose exec postgres psql -U mlp_user -d mlp_db -c \
+		"SELECT indexname, indexdef FROM pg_indexes WHERE tablename = '$(TABLE)';"
+
+# =============================================================================
+# 💾 BACKUP Y RESTORE
+# =============================================================================
+
+db-backup: ## Crear backup de la base de datos
+	@echo "$(GREEN)💾 Creando backup...$(NC)"
+	@mkdir -p backups
+	@TIMESTAMP=$$(date +%Y%m%d_%H%M%S) && \
+	docker compose exec postgres pg_dump -U mlp_user mlp_db > backups/backup_$$TIMESTAMP.sql && \
+	echo "$(GREEN)✅ Backup creado: backups/backup_$$TIMESTAMP.sql$(NC)"
+
+db-restore: ## Restaurar backup (uso: make db-restore BACKUP=backups/backup_20231220_120000.sql)
+	@if [ -z "$(BACKUP)" ]; then \
+		echo "$(RED)❌ Error: Debes proporcionar BACKUP$(NC)"; \
+		echo "$(YELLOW)Uso: make db-restore BACKUP=backups/backup_20231220_120000.sql$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(YELLOW)⚠️  ADVERTENCIA: Esto sobrescribirá la base de datos actual$(NC)"
+	@read -p "¿Continuar? [y/N]: " confirm && [ "$$confirm" = "y" ] || exit 1
+	@echo "$(GREEN)📥 Restaurando backup...$(NC)"
+	docker compose exec -T postgres psql -U mlp_user mlp_db < $(BACKUP)
+	@echo "$(GREEN)✅ Backup restaurado$(NC)"
+
+# =============================================================================
+# 🧹 LIMPIEZA
+# =============================================================================
+
+db-reset: ## Reset completo de la base de datos (¡PELIGRO!)
+	@echo "$(RED)⚠️  ADVERTENCIA: Esto eliminará TODOS los datos$(NC)"
+	@read -p "¿Estás seguro? [y/N]: " confirm && [ "$$confirm" = "y" ] || exit 1
+	@echo "$(YELLOW)🗑️  Eliminando base de datos...$(NC)"
+	docker compose down postgres
+	docker volume rm mlp_postgres_data 2>/dev/null || true
+	@echo "$(GREEN)🚀 Recreando base de datos...$(NC)"
+	docker compose up -d postgres
+	@echo "$(YELLOW)⏳ Esperando a que PostgreSQL esté listo...$(NC)"
+	@sleep 5
+	@$(MAKE) -f Makefile.database db-migrate
+	@echo "$(GREEN)✅ Base de datos reseteada$(NC)"
+
+db-drop-all-tables: ## Eliminar todas las tablas (excepto alembic_version)
+	@echo "$(RED)⚠️  ADVERTENCIA: Esto eliminará todas las tablas$(NC)"
+	@read -p "¿Continuar? [y/N]: " confirm && [ "$$confirm" = "y" ] || exit 1
+	@echo "$(YELLOW)🗑️  Eliminando tablas...$(NC)"
+	@docker compose exec postgres psql -U mlp_user -d mlp_db -c \
+		"DO \$\$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename != 'alembic_version') LOOP EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END \$\$;"
+	@echo "$(GREEN)✅ Tablas eliminadas$(NC)"
+
+# =============================================================================
+# 🤖 GENERACIÓN AUTOMÁTICA
+# =============================================================================
+
+db-generate-code: ## Generar Pydantic schemas y queries desde modelo SQLAlchemy (uso: make db-generate-code MODEL=user)
+	@if [ -z "$(MODEL)" ]; then \
+		echo "$(RED)❌ Error: Debes proporcionar MODEL$(NC)"; \
+		echo "$(YELLOW)Uso: make db-generate-code MODEL=user$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)🤖 Generando código para modelo: $(MODEL)$(NC)"
+	docker compose exec api python -m scripts.generate_code $(MODEL)
+	@echo "$(GREEN)✅ Código generado$(NC)"
+	@echo "$(YELLOW)⚠️  Revisa los archivos generados en:$(NC)"
+	@echo "  - services/api/app/models/$(MODEL).py"
+	@echo "  - services/api/app/queries/$(MODEL).py"
+
+db-generate-model: ## Generar modelo SQLAlchemy desde tabla existente (uso: make db-generate-model TABLE=users)
+	@if [ -z "$(TABLE)" ]; then \
+		echo "$(RED)❌ Error: Debes proporcionar TABLE$(NC)"; \
+		echo "$(YELLOW)Uso: make db-generate-model TABLE=users$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)🤖 Generando modelo desde tabla: $(TABLE)$(NC)"
+	docker compose exec api python -m scripts.generate_model $(TABLE)
+	@echo "$(GREEN)✅ Modelo generado$(NC)"
+	@echo "$(YELLOW)⚠️  Revisa el archivo generado en:$(NC)"
+	@echo "  - services/api/app/db_models/$(TABLE).py"
+
+# =============================================================================
+# ⚡ WORKFLOWS COMPLETOS
+# =============================================================================
+
+db-new-table: ## Workflow completo para crear nueva tabla (interactivo)
+	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
+	@echo "$(GREEN)  🚀 Workflow: Crear Nueva Tabla$(NC)"
+	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
+	@echo ""
+	@echo "$(YELLOW)📝 Este workflow te guiará paso a paso:$(NC)"
+	@echo "  1. Crear modelo SQLAlchemy"
+	@echo "  2. Generar migración"
+	@echo "  3. Aplicar migración"
+	@echo "  4. Generar Pydantic schemas y queries"
+	@echo "  5. Verificar en base de datos"
+	@echo ""
+	@read -p "Nombre de la tabla (ej: products): " table_name && \
+	read -p "Mensaje de migración (ej: add products table): " msg && \
+	echo "" && \
+	echo "$(GREEN)📋 Resumen:$(NC)" && \
+	echo "  Tabla: $$table_name" && \
+	echo "  Mensaje: $$msg" && \
+	echo "" && \
+	read -p "¿Continuar? [y/N]: " confirm && [ "$$confirm" = "y" ] && \
+	echo "" && \
+	echo "$(BLUE)📝 Paso 1: Crea manualmente el modelo SQLAlchemy$(NC)" && \
+	echo "  Archivo: services/api/app/db_models/$$table_name.py" && \
+	echo "  Importa en: services/api/app/db_models/__init__.py" && \
+	echo "" && \
+	read -p "Presiona ENTER cuando hayas creado el modelo..." && \
+	echo "" && \
+	echo "$(BLUE)📝 Paso 2: Generando migración...$(NC)" && \
+	$(MAKE) -f Makefile.database db-migrate-create MSG="$$msg" && \
+	echo "" && \
+	echo "$(YELLOW)⚠️  Revisa el archivo de migración generado$(NC)" && \
+	read -p "¿Migración correcta? [y/N]: " migration_ok && [ "$$migration_ok" = "y" ] && \
+	echo "" && \
+	echo "$(BLUE)📝 Paso 3: Aplicando migración...$(NC)" && \
+	$(MAKE) -f Makefile.database db-migrate && \
+	echo "" && \
+	echo "$(BLUE)📝 Paso 4: Generando Pydantic schemas y queries...$(NC)" && \
+	$(MAKE) -f Makefile.database db-generate-code MODEL=$$table_name && \
+	echo "" && \
+	echo "$(BLUE)📝 Paso 5: Verificando en base de datos...$(NC)" && \
+	$(MAKE) -f Makefile.database db-describe TABLE=$$table_name && \
+	echo "" && \
+	echo "$(GREEN)✅ ¡Tabla creada exitosamente!$(NC)" && \
+	echo "" && \
+	echo "$(YELLOW)📋 Próximos pasos:$(NC)" && \
+	echo "  1. Actualizar __init__.py de models y queries" && \
+	echo "  2. Agregar seed data en scripts/seed_data.py (opcional)" && \
+	echo "  3. Hacer commit de los cambios" && \
+	echo ""
+
+db-quick-table: ## Crear tabla rápida con parámetros (uso: make db-quick-table TABLE=products MSG="add products")
+	@if [ -z "$(TABLE)" ] || [ -z "$(MSG)" ]; then \
+		echo "$(RED)❌ Error: Debes proporcionar TABLE y MSG$(NC)"; \
+		echo "$(YELLOW)Uso: make db-quick-table TABLE=products MSG='add products table'$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)⚡ Workflow rápido para tabla: $(TABLE)$(NC)"
+	@echo ""
+	@echo "$(YELLOW)⚠️  Asegúrate de haber creado el modelo SQLAlchemy primero$(NC)"
+	@read -p "¿Continuar? [y/N]: " confirm && [ "$$confirm" = "y" ] || exit 1
+	@echo ""
+	@$(MAKE) -f Makefile.database db-migrate-create MSG="$(MSG)"
+	@echo ""
+	@read -p "¿Migración correcta? [y/N]: " migration_ok && [ "$$migration_ok" = "y" ] || exit 1
+	@echo ""
+	@$(MAKE) -f Makefile.database db-migrate
+	@echo ""
+	@$(MAKE) -f Makefile.database db-generate-code MODEL=$(TABLE)
+	@echo ""
+	@$(MAKE) -f Makefile.database db-describe TABLE=$(TABLE)
+	@echo ""
+	@echo "$(GREEN)✅ Tabla $(TABLE) creada y configurada$(NC)"
+
+# =============================================================================
+# 📊 ESTADÍSTICAS
+# =============================================================================
+
+db-stats: ## Ver estadísticas de la base de datos
+	@echo "$(BLUE)📊 Estadísticas de Base de Datos:$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Tamaño de la base de datos:$(NC)"
+	@docker compose exec postgres psql -U mlp_user -d mlp_db -c \
+		"SELECT pg_size_pretty(pg_database_size('mlp_db')) as size;"
+	@echo ""
+	@echo "$(YELLOW)Número de tablas:$(NC)"
+	@docker compose exec postgres psql -U mlp_user -d mlp_db -c \
+		"SELECT COUNT(*) as total_tables FROM information_schema.tables WHERE table_schema = 'public';"
+	@echo ""
+	@echo "$(YELLOW)Tamaño de cada tabla:$(NC)"
+	@docker compose exec postgres psql -U mlp_user -d mlp_db -c \
+		"SELECT tablename, pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size FROM pg_tables WHERE schemaname = 'public' ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;"
+
+db-connections: ## Ver conexiones activas
+	@echo "$(BLUE)🔌 Conexiones activas:$(NC)"
+	@docker compose exec postgres psql -U mlp_user -d mlp_db -c \
+		"SELECT datname, usename, application_name, client_addr, state, query_start FROM pg_stat_activity WHERE datname = 'mlp_db';"
+
+# =============================================================================
+# FIN DEL MAKEFILE
+# =============================================================================

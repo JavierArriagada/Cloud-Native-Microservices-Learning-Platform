@@ -17,6 +17,7 @@ from .user import User
 from .role import Role
 from .user_role import UserRole
 from .session import Session
+from .audit_log import AuditLog, AuditAction
 
 # Metadata para Alembic
 metadata = Base.metadata
@@ -28,4 +29,6 @@ __all__ = [
     "Role",
     "UserRole",
     "Session",
+    "AuditLog",
+    "AuditAction",
 ]

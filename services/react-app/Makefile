@@ -13,8 +13,8 @@ SERVICE_NAME := react
 NODE := node
 NPM := npm
 DOCKER_COMPOSE := docker compose
-COMPOSE_FILE := ../../infrastructure/docker/docker-compose.yml
-COMPOSE_DEV := ../../infrastructure/docker/docker-compose.dev.yml
+COMPOSE_FILE := infrastructure/docker/docker-compose.yml
+COMPOSE_DEV := infrastructure/docker/docker-compose.dev.yml
 
 # Colores
 RED := \033[0;31m
