@@ -143,9 +143,16 @@ db-migrate-down: ## [DOCKER] Revertir última migración
 db-migrate-history: ## [DOCKER] Ver historial de migraciones
 	cd ../.. && $(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec $(SERVICE_NAME) alembic history
 
-db-seed: ## [DOCKER] Cargar datos de ejemplo
+db-seed: ## [DOCKER] Cargar datos de ejemplo (usuarios y roles)
 	@echo "$(GREEN)🌱 Cargando datos de ejemplo...$(NC)"
 	cd ../.. && $(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec $(SERVICE_NAME) python -m scripts.seed_data
+
+db-seed-mining: ## [DOCKER] Cargar datos de minería (yacimientos, equipos, etc.)
+	@echo "$(GREEN)⛏️  Cargando datos de minería...$(NC)"
+	cd ../.. && $(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec $(SERVICE_NAME) python -m scripts.seed_mining_data
+
+db-seed-all: db-seed db-seed-mining ## [DOCKER] Cargar todos los datos de ejemplo
+	@echo "$(GREEN)✅ Todos los datos cargados$(NC)"
 
 # =============================================================================
 # 🐍 MODO LOCAL - SETUP
@@ -260,6 +267,13 @@ local-db-migrate-history: ## [LOCAL] Ver historial
 local-db-seed: ## [LOCAL] Cargar datos de ejemplo
 	@echo "$(GREEN)🌱 Cargando datos...$(NC)"
 	./$(VENV)/bin/python -m scripts.seed_data
+
+local-db-seed-mining: ## [LOCAL] Cargar datos de minería
+	@echo "$(GREEN)⛏️  Cargando datos de minería...$(NC)"
+	./$(VENV)/bin/python -m scripts.seed_mining_data
+
+local-db-seed-all: local-db-seed local-db-seed-mining ## [LOCAL] Cargar todos los datos
+	@echo "$(GREEN)✅ Todos los datos cargados$(NC)"
 
 # =============================================================================
 # 🔧 UTILIDADES

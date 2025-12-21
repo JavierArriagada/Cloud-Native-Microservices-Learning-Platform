@@ -308,8 +308,14 @@ db-migrate-create: ## Crear nueva migración (uso: make db-migrate-create MSG="m
 db-migrate-down: ## Revertir última migración
 	@$(MAKE) -C $(API_DIR) db-migrate-down
 
-db-seed: ## Cargar datos de ejemplo
+db-seed: ## Cargar datos de ejemplo (usuarios y roles)
 	@$(MAKE) -C $(API_DIR) db-seed
+
+db-seed-mining: ## Cargar datos de minería (yacimientos, equipos, etc.)
+	@$(MAKE) -C $(API_DIR) db-seed-mining
+
+db-seed-all: ## Cargar todos los datos de ejemplo
+	@$(MAKE) -C $(API_DIR) db-seed-all
 
 db-reset: ## Reset completo de base de datos (¡PELIGRO!)
 	@echo "$(RED)⚠️  ADVERTENCIA: Esto eliminará todos los datos$(NC)"

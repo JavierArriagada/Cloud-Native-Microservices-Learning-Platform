@@ -944,5 +944,221 @@ Al agregar nuevas tablas o modificar el diseño:
 
 ---
 
-**Última actualización**: 2025-12-20
+## Dominio Minero - Capa 1: Entidades Maestras
+
+El sistema incluye un dominio completo para monitoreo de procesos mineros de Cu/Mo. Las entidades maestras son la base del modelo de datos.
+
+### Diagrama ER - Dominio Minero
+
+```mermaid
+erDiagram
+    DEPOSITS ||--o{ MINES : "1:N"
+    DEPOSITS ||--o{ COORDINATES : "1:N"
+    DEPOSITS ||--o{ MINERALOGY : "1:N"
+    MINES ||--o{ MINE_PHASES : "1:N"
+    MINES ||--o{ EQUIPMENT : "1:N"
+    MINES ||--o{ OPERATORS : "1:N"
+    MINES ||--o{ PROCESS_AREAS : "1:N"
+    MINE_PHASES ||--o{ BLOCKS : "1:N"
+    EQUIPMENT_TYPES ||--o{ EQUIPMENT : "1:N"
+    PROCESS_AREAS ||--o| PROCESS_AREAS : "parent"
+
+    DEPOSITS {
+        uuid id PK
+        string code UK
+        string name
+        string genetic_model
+        string primary_commodity
+        decimal measured_resources_mt
+        decimal avg_cu_grade_pct
+        string country
+        string region
+    }
+
+    MINES {
+        uuid id PK
+        uuid deposit_id FK
+        string code UK
+        string name
+        enum mine_type
+        decimal design_capacity_tpd
+        boolean is_active
+    }
+
+    MINE_PHASES {
+        uuid id PK
+        uuid mine_id FK
+        string code
+        int sequence_number
+        decimal design_tonnage_mt
+        decimal design_cu_grade_pct
+    }
+
+    BLOCKS {
+        uuid id PK
+        uuid mine_phase_id FK
+        string code
+        int block_i
+        int block_j
+        int block_k
+        decimal tonnage
+        decimal cu_grade_pct
+        enum mineral_type
+        boolean is_mined
+    }
+
+    COORDINATES {
+        uuid id PK
+        uuid deposit_id FK
+        string point_type
+        decimal latitude
+        decimal longitude
+        decimal elevation_masl
+    }
+
+    MINERALOGY {
+        uuid id PK
+        uuid deposit_id FK
+        string mineral_name
+        string mineral_formula
+        string mineral_class
+        boolean is_primary_ore
+        string floatability
+    }
+
+    EQUIPMENT_TYPES {
+        uuid id PK
+        string code UK
+        string name
+        enum category
+        string manufacturer
+        decimal capacity
+        decimal power_kw
+    }
+
+    EQUIPMENT {
+        uuid id PK
+        uuid equipment_type_id FK
+        uuid mine_id FK
+        string code UK
+        enum status
+        decimal total_operating_hours
+    }
+
+    OPERATORS {
+        uuid id PK
+        uuid mine_id FK
+        string employee_code UK
+        string first_name
+        string last_name
+        string job_title
+        enum default_shift
+    }
+
+    REAGENTS {
+        uuid id PK
+        string code UK
+        string name
+        string reagent_type
+        string chemical_formula
+        decimal recommended_dosage_min
+        decimal unit_cost
+    }
+
+    PROCESS_AREAS {
+        uuid id PK
+        uuid mine_id FK
+        uuid parent_area_id FK
+        string code
+        enum area_type
+        int sequence_order
+        decimal target_recovery_pct
+    }
+```
+
+### Tablas del Dominio Minero
+
+| Tabla | Descripción | Registros Seed |
+|-------|-------------|----------------|
+| `deposits` | Yacimientos mineros con recursos y reservas | 3 |
+| `mines` | Operaciones mineras (rajo abierto, subterránea) | 4 |
+| `mine_phases` | Fases de explotación con secuencia | 12 |
+| `blocks` | Bloques del modelo de bloques (muestra) | 75 |
+| `coordinates` | Coordenadas geoespaciales WGS84/UTM | 3 |
+| `mineralogy` | Composición mineralógica y flotabilidad | 9 |
+| `equipment_types` | Catálogo de tipos de equipos | 15 |
+| `equipment` | Equipos físicos con horas de operación | 12 |
+| `operators` | Operadores con licencias y turnos | 8 |
+| `reagents` | Reactivos químicos para flotación | 10 |
+| `process_areas` | Áreas de proceso de la planta | 10 |
+
+### ENUMs del Dominio Minero
+
+```mermaid
+graph TD
+    A[Mining ENUMs] --> B[mine_type_enum]
+    A --> C[mineral_type_enum]
+    A --> D[equipment_category_enum]
+    A --> E[equipment_status_enum]
+    A --> F[process_area_type_enum]
+    A --> G[shift_type_enum]
+
+    B --> B1[OPEN_PIT]
+    B --> B2[UNDERGROUND]
+    B --> B3[MIXED]
+
+    C --> C1[SULFIDE]
+    C --> C2[OXIDE]
+    C --> C3[MIXED]
+    C --> C4[TRANSITION]
+
+    D --> D1[HAUL_TRUCK]
+    D --> D2[EXCAVATOR]
+    D --> D3[MILL]
+    D --> D4[FLOTATION_CELL]
+    D --> D5[...]
+
+    E --> E1[OPERATIONAL]
+    E --> E2[MAINTENANCE]
+    E --> E3[FAILED]
+    E --> E4[STANDBY]
+```
+
+### Comandos de Seed Data
+
+```bash
+# Cargar solo datos de usuarios y roles
+make db-seed
+
+# Cargar datos de minería (yacimientos, equipos, etc.)
+make db-seed-mining
+
+# Cargar todos los datos de ejemplo
+make db-seed-all
+```
+
+### Datos de Ejemplo Incluidos
+
+El seed data incluye datos realistas de minería chilena:
+
+**Yacimientos:**
+- El Teniente (O'Higgins) - Mayor mina subterránea de cobre del mundo
+- Chuquicamata (Antofagasta) - Una de las mayores minas a cielo abierto
+- Escondida (Antofagasta) - Mayor productor de cobre del mundo
+
+**Equipos:**
+- Camiones CAT 797F (400 t)
+- Palas eléctricas CAT 7495
+- Molinos SAG y de Bolas
+- Celdas de flotación Outotec
+
+**Reactivos:**
+- Colectores: PAX, SIPX, Aerophine 3418A
+- Espumantes: MIBC, Dowfroth 250
+- Depresantes: NaHS, CMC
+- Modificadores pH: Cal, H2SO4
+
+---
+
+**Última actualización**: 2025-12-21
 **Versión de la base de datos**: Ver con `make -f services/api/Makefile.database db-migrate-current`
