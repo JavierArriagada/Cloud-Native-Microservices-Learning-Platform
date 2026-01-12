@@ -25,6 +25,9 @@ Contacto
 
 ## Índice de la documentación (actual)
 
+### Instalación y Configuración Inicial
+- **[🇪🇸 GUIA_INSTALACION.md](GUIA_INSTALACION.md)** — Guía completa de instalación paso a paso en español (requisitos, instalación rápida, solución de problemas)
+
 ### Planificación y Arquitectura
 - [MICROSERVICES_MASTER_PLAN.md](MICROSERVICES_MASTER_PLAN.md) — Documento maestro de planificación y arquitectura (arquitectura, stack, guías, diagramas).
 

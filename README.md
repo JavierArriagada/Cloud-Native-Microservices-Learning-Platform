@@ -3,6 +3,8 @@
 ![CI/CD Status](https://github.com/JavierArriagada/microservices-learning-platform/actions/workflows/ci.yml/badge.svg)
 ![Docker Pulls](https://img.shields.io/docker/pulls/your-dockerhub-username/api.svg)
 
+> **⚡ [Inicio Rápido en 5 minutos](INICIO_RAPIDO.md)** | **📖 [Guía de Instalación Completa](docs/GUIA_INSTALACION.md)** | **🇪🇸 Documentación en Español**
+
 ## 🌟 Visión General
 
 Este proyecto implementa una plataforma cloud-native basada en microservicios, diseñada para operar sistemas distribuidos utilizando un stack tecnológico moderno y relevante en la industria.
@@ -75,6 +77,10 @@ flowchart TB
 
 ## 📚 Documentación
 
+### Instalación
+- **[🇪🇸 Guía de Instalación Completa](docs/GUIA_INSTALACION.md)** - Guía paso a paso en español
+- **Script de instalación automatizada**: `./install.sh` - Instalación en un solo comando
+
 ### Inicio Rápido
 - [Planificación y Arquitectura](docs/MICROSERVICES_MASTER_PLAN.md) - Documento maestro del proyecto
 - [Credenciales de Desarrollo](docs/DEVELOPMENT_CREDENTIALS.md) - Acceso a servicios locales
@@ -95,20 +101,42 @@ Ver [documentación completa](docs/README.md) para más recursos.
 
 ## 🚀 Inicio Rápido
 
+### Instalación Automatizada (Recomendado)
+
 ```bash
 # Clonar el repositorio
 git clone https://github.com/JavierArriagada/Cloud-Native-Microservices-Learning-Platform.git
 cd Cloud-Native-Microservices-Learning-Platform
 
-# Levantar todos los servicios
-docker compose -f infrastructure/docker/docker-compose.yml up -d
-
-# Aplicar migraciones de base de datos
-cd services/api && make db-migrate
-
-# Cargar datos de ejemplo
-make db-seed
+# Ejecutar script de instalación automatizada
+./install.sh
 ```
+
+El script `install.sh` automáticamente:
+- ✅ Verifica requisitos previos (Docker, Git, Make)
+- ✅ Configura variables de entorno
+- ✅ Construye imágenes Docker
+- ✅ Levanta todos los servicios
+- ✅ Aplica migraciones de base de datos
+- ✅ Carga datos de ejemplo
+
+### Instalación Manual
+
+```bash
+# 1. Configurar entorno
+cp .env.example .env
+
+# 2. Levantar todos los servicios
+docker compose -f infrastructure/docker/docker-compose.yml -f infrastructure/docker/docker-compose.dev.yml up -d
+
+# 3. Aplicar migraciones de base de datos
+docker exec -it mlp-api-1 python -m alembic upgrade head
+
+# 4. Cargar datos de ejemplo (opcional)
+docker exec -it mlp-api-1 python -m scripts.seed_data
+```
+
+> 📖 **Para instrucciones detalladas**, ver la [Guía de Instalación Completa](docs/GUIA_INSTALACION.md)
 
 ### Acceso a Servicios
 

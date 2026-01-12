@@ -1,0 +1,275 @@
+# =============================================================================
+# Makefile de Instalación
+# Cloud-Native Microservices Learning Platform
+# =============================================================================
+# Comandos simplificados para instalación y configuración inicial
+# =============================================================================
+
+.PHONY: help check-requirements setup-env install-quick install-full install-dev verify clean
+
+# Colores para output
+GREEN  := \033[0;32m
+YELLOW := \033[1;33m
+RED    := \033[0;31m
+NC     := \033[0m # No Color
+
+# Variables
+COMPOSE_FILES := -f infrastructure/docker/docker-compose.yml -f infrastructure/docker/docker-compose.dev.yml
+COMPOSE := docker compose $(COMPOSE_FILES)
+
+# =============================================================================
+# Help
+# =============================================================================
+
+help: ## Mostrar esta ayuda
+	@echo "╔═══════════════════════════════════════════════════════════════╗"
+	@echo "║  🚀 Cloud-Native Microservices - Instalación                 ║"
+	@echo "╚═══════════════════════════════════════════════════════════════╝"
+	@echo ""
+	@echo "Uso: make -f Makefile.install [comando]"
+	@echo ""
+	@echo "Comandos de instalación:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-20s$(NC) %s\n", $$1, $$2}'
+	@echo ""
+
+# =============================================================================
+# Verificación de requisitos
+# =============================================================================
+
+check-requirements: ## Verificar requisitos previos (Docker, Git, etc.)
+	@echo "$(YELLOW)Verificando requisitos previos...$(NC)"
+	@command -v docker >/dev/null 2>&1 || { echo "$(RED)✗ Docker no está instalado$(NC)"; exit 1; }
+	@echo "$(GREEN)✓ Docker instalado:$(NC) $$(docker --version)"
+
+	@docker compose version >/dev/null 2>&1 || { echo "$(RED)✗ Docker Compose v2 no está instalado$(NC)"; exit 1; }
+	@echo "$(GREEN)✓ Docker Compose instalado:$(NC) $$(docker compose version)"
+
+	@docker info >/dev/null 2>&1 || { echo "$(RED)✗ Docker daemon no está corriendo$(NC)"; exit 1; }
+	@echo "$(GREEN)✓ Docker daemon corriendo$(NC)"
+
+	@command -v git >/dev/null 2>&1 && echo "$(GREEN)✓ Git instalado:$(NC) $$(git --version)" || echo "$(YELLOW)⚠ Git no instalado (opcional)$(NC)"
+
+	@command -v make >/dev/null 2>&1 && echo "$(GREEN)✓ Make instalado$(NC)" || echo "$(YELLOW)⚠ Make disponible$(NC)"
+	@echo "$(GREEN)✓ Todos los requisitos están cumplidos$(NC)"
+
+# =============================================================================
+# Configuración del entorno
+# =============================================================================
+
+setup-env: ## Crear archivo .env desde .env.example
+	@if [ -f .env ]; then \
+		echo "$(YELLOW)⚠ El archivo .env ya existe. No se sobrescribirá.$(NC)"; \
+		echo "  Usa: make clean-env && make setup-env para recrearlo"; \
+	else \
+		cp .env.example .env; \
+		echo "$(GREEN)✓ Archivo .env creado desde .env.example$(NC)"; \
+	fi
+
+# =============================================================================
+# Instalación
+# =============================================================================
+
+install-quick: check-requirements setup-env ## Instalación rápida (sin construir, usa imágenes base)
+	@echo "$(YELLOW)Instalación rápida...$(NC)"
+	@echo "$(YELLOW)1/3 Levantando servicios...$(NC)"
+	@$(COMPOSE) up -d
+	@echo "$(YELLOW)2/3 Esperando PostgreSQL...$(NC)"
+	@sleep 15
+	@echo "$(YELLOW)3/3 Aplicando migraciones...$(NC)"
+	@docker exec mlp-api-1 python -m alembic upgrade head 2>/dev/null || echo "$(YELLOW)⚠ Migraciones no disponibles aún$(NC)"
+	@echo "$(GREEN)✓ Instalación rápida completada$(NC)"
+	@make show-urls
+
+install-full: check-requirements setup-env build-all ## Instalación completa (construye imágenes, migraciones, seed data)
+	@echo "$(YELLOW)Instalación completa...$(NC)"
+	@echo "$(YELLOW)1/4 Levantando servicios...$(NC)"
+	@$(COMPOSE) up -d
+	@echo "$(YELLOW)2/4 Esperando PostgreSQL...$(NC)"
+	@sleep 20
+	@echo "$(YELLOW)3/4 Aplicando migraciones...$(NC)"
+	@docker exec mlp-api-1 python -m alembic upgrade head
+	@echo "$(YELLOW)4/4 Cargando datos de ejemplo...$(NC)"
+	@docker exec mlp-api-1 python -m scripts.seed_data 2>/dev/null || echo "$(YELLOW)⚠ Seed data no disponible$(NC)"
+	@docker exec mlp-api-1 python -m scripts.seed_mining_data 2>/dev/null || echo "$(YELLOW)⚠ Seed mining data no disponible$(NC)"
+	@echo "$(GREEN)✓ Instalación completa finalizada$(NC)"
+	@make show-urls
+
+install-dev: install-full ## Instalación para desarrollo (con monitoreo)
+	@echo "$(YELLOW)Levantando stack de monitoreo...$(NC)"
+	@docker compose -f infrastructure/docker/docker-compose.monitoring.yml up -d 2>/dev/null || echo "$(YELLOW)⚠ Monitoreo no disponible$(NC)"
+	@echo "$(GREEN)✓ Entorno de desarrollo completo$(NC)"
+
+# =============================================================================
+# Build
+# =============================================================================
+
+build-all: ## Construir todas las imágenes Docker
+	@echo "$(YELLOW)Construyendo imágenes Docker...$(NC)"
+	@$(COMPOSE) build
+	@echo "$(GREEN)✓ Imágenes construidas$(NC)"
+
+build-nocache: ## Construir imágenes sin usar caché
+	@echo "$(YELLOW)Construyendo imágenes sin caché...$(NC)"
+	@$(COMPOSE) build --no-cache
+	@echo "$(GREEN)✓ Imágenes construidas$(NC)"
+
+# =============================================================================
+# Verificación
+# =============================================================================
+
+verify: ## Verificar que todos los servicios estén corriendo
+	@echo "$(YELLOW)Verificando servicios...$(NC)"
+	@$(COMPOSE) ps
+	@echo ""
+	@echo "$(YELLOW)Probando conectividad...$(NC)"
+	@curl -sf http://localhost/api/health >/dev/null && echo "$(GREEN)✓ API respondiendo$(NC)" || echo "$(RED)✗ API no responde$(NC)"
+	@curl -sf http://localhost:8080 >/dev/null && echo "$(GREEN)✓ Traefik Dashboard accesible$(NC)" || echo "$(RED)✗ Traefik no responde$(NC)"
+	@docker exec mlp-postgres-1 pg_isready -U mlp_user >/dev/null 2>&1 && echo "$(GREEN)✓ PostgreSQL listo$(NC)" || echo "$(RED)✗ PostgreSQL no responde$(NC)"
+
+show-urls: ## Mostrar URLs de acceso a servicios
+	@echo ""
+	@echo "╔═══════════════════════════════════════════════════════════════╗"
+	@echo "║  📍 Acceso a Servicios                                       ║"
+	@echo "╚═══════════════════════════════════════════════════════════════╝"
+	@echo ""
+	@echo "  🌐 Frontend:        http://localhost"
+	@echo "  📚 API Docs:        http://localhost/api/docs"
+	@echo "  📊 Dashboard:       http://localhost/dash"
+	@echo "  🔀 Traefik:         http://localhost:8080"
+	@echo "  📈 Grafana:         http://localhost:3001 (admin/admin_change_in_production)"
+	@echo "  🔥 Prometheus:      http://localhost:9090"
+	@echo ""
+	@echo "$(GREEN)✓ Instalación completada exitosamente$(NC)"
+	@echo ""
+
+# =============================================================================
+# Datos
+# =============================================================================
+
+load-seed-data: ## Cargar datos de ejemplo
+	@echo "$(YELLOW)Cargando datos de ejemplo...$(NC)"
+	@docker exec mlp-api-1 python -m scripts.seed_data
+	@docker exec mlp-api-1 python -m scripts.seed_mining_data
+	@echo "$(GREEN)✓ Datos cargados$(NC)"
+
+db-migrate: ## Aplicar migraciones de base de datos
+	@echo "$(YELLOW)Aplicando migraciones...$(NC)"
+	@docker exec mlp-api-1 python -m alembic upgrade head
+	@echo "$(GREEN)✓ Migraciones aplicadas$(NC)"
+
+db-reset: ## Resetear base de datos (⚠️ borra todos los datos)
+	@echo "$(RED)⚠️  ADVERTENCIA: Esto borrará todos los datos de la base de datos$(NC)"
+	@read -p "¿Estás seguro? [y/N]: " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		$(COMPOSE) down -v; \
+		$(COMPOSE) up -d postgres; \
+		sleep 10; \
+		$(COMPOSE) up -d; \
+		sleep 10; \
+		docker exec mlp-api-1 python -m alembic upgrade head; \
+		echo "$(GREEN)✓ Base de datos reseteada$(NC)"; \
+	else \
+		echo "$(YELLOW)Operación cancelada$(NC)"; \
+	fi
+
+# =============================================================================
+# Limpieza
+# =============================================================================
+
+clean-env: ## Eliminar archivo .env
+	@rm -f .env
+	@echo "$(GREEN)✓ Archivo .env eliminado$(NC)"
+
+clean-containers: ## Detener y eliminar contenedores
+	@echo "$(YELLOW)Deteniendo contenedores...$(NC)"
+	@$(COMPOSE) down
+	@echo "$(GREEN)✓ Contenedores detenidos$(NC)"
+
+clean-volumes: ## Eliminar volúmenes (⚠️ borra datos de BD)
+	@echo "$(RED)⚠️  ADVERTENCIA: Esto borrará todos los datos persistentes$(NC)"
+	@read -p "¿Estás seguro? [y/N]: " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		$(COMPOSE) down -v; \
+		echo "$(GREEN)✓ Volúmenes eliminados$(NC)"; \
+	else \
+		echo "$(YELLOW)Operación cancelada$(NC)"; \
+	fi
+
+clean-images: ## Eliminar imágenes construidas
+	@echo "$(YELLOW)Eliminando imágenes...$(NC)"
+	@docker images | grep mlp | awk '{print $$3}' | xargs -r docker rmi -f
+	@echo "$(GREEN)✓ Imágenes eliminadas$(NC)"
+
+clean-all: clean-containers clean-volumes clean-images clean-env ## Limpieza completa (⚠️ elimina todo)
+	@echo "$(GREEN)✓ Limpieza completa realizada$(NC)"
+
+# =============================================================================
+# Troubleshooting
+# =============================================================================
+
+logs: ## Ver logs de todos los servicios
+	@$(COMPOSE) logs -f
+
+logs-api: ## Ver logs solo del API
+	@docker logs -f mlp-api-1
+
+logs-db: ## Ver logs solo de PostgreSQL
+	@docker logs -f mlp-postgres-1
+
+restart-all: ## Reiniciar todos los servicios
+	@echo "$(YELLOW)Reiniciando servicios...$(NC)"
+	@$(COMPOSE) restart
+	@echo "$(GREEN)✓ Servicios reiniciados$(NC)"
+
+restart-api: ## Reiniciar solo el API
+	@docker restart mlp-api-1
+	@echo "$(GREEN)✓ API reiniciado$(NC)"
+
+restart-db: ## Reiniciar solo PostgreSQL
+	@docker restart mlp-postgres-1
+	@echo "$(GREEN)✓ PostgreSQL reiniciado$(NC)"
+
+shell-api: ## Abrir shell en contenedor del API
+	@docker exec -it mlp-api-1 bash
+
+shell-db: ## Abrir psql en PostgreSQL
+	@docker exec -it mlp-postgres-1 psql -U mlp_user -d mlp_db
+
+# =============================================================================
+# Atajos comunes
+# =============================================================================
+
+start: ## Iniciar servicios (alias de install-quick)
+	@$(COMPOSE) up -d
+	@echo "$(GREEN)✓ Servicios iniciados$(NC)"
+
+stop: ## Detener servicios
+	@$(COMPOSE) down
+	@echo "$(GREEN)✓ Servicios detenidos$(NC)"
+
+status: ## Ver estado de servicios
+	@$(COMPOSE) ps
+
+# =============================================================================
+# Instalación con un solo comando
+# =============================================================================
+
+install: ## Instalación completa (recomendado para nuevos usuarios)
+	@echo "╔═══════════════════════════════════════════════════════════════╗"
+	@echo "║  🚀 Instalación Automatizada                                 ║"
+	@echo "╚═══════════════════════════════════════════════════════════════╝"
+	@echo ""
+	@make check-requirements
+	@echo ""
+	@make setup-env
+	@echo ""
+	@make build-all
+	@echo ""
+	@make install-full
+	@echo ""
+	@echo "╔═══════════════════════════════════════════════════════════════╗"
+	@echo "║  ✅ Instalación Completada                                   ║"
+	@echo "╚═══════════════════════════════════════════════════════════════╝"
